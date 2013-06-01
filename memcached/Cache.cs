@@ -23,7 +23,20 @@ namespace memcached
 {
 	public class Cache
 	{
-		private Dictionary<string, string> db = new Dictionary<string, string>();
+		public class Item
+		{
+			public string value = null;
+			public DateTime expiry;
+			public int flags = 0;
+
+			public Item(string data, int Expiry, int Flags)
+			{
+				value = data;
+				flags = Flags;
+				expiry = DateTime.Now.AddSeconds (Expiry);
+			}
+		}
+		private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="memcached.Cache"/> class.
@@ -31,6 +44,82 @@ namespace memcached
 		public Cache ()
 		{
 
+		}
+
+		private void hardSet(string id, Item data)
+		{
+			lock (db)
+			{
+				if (!db.ContainsKey (id))
+				{
+					db.Add(id, data);
+					return;
+				}
+				db[id] = data;
+			}
+		}
+
+		/// <summary>
+		/// Set the specified key and value.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="value">Value.</param>
+		public bool Set(string key, Item value)
+		{
+			hardSet (key, value);
+			return true;
+		}
+
+		/// <summary>
+		/// Get the specified key.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		public Item Get(string key)
+		{
+			lock (db)
+			{
+				if (db.ContainsKey(key))
+				{
+					return db[key];
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Delete the specified key.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		public bool Delete(string key)
+		{
+			lock(db)
+			{
+				if (db.ContainsKey(key))
+				{
+					db.Remove (key);
+					return true;
+				}
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Add the specified key.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="d">D.</param>
+		public bool Add(string key, Item d)
+		{
+			lock (db)
+			{
+				if (!db.ContainsKey (key))
+				{
+					db.Add (key, d);
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

@@ -22,8 +22,12 @@ namespace memcached
 {
 	public class User
 	{
-		public User ()
+		public string username = null;
+		public string password = null;
+
+		public User (string name)
 		{
+			username = name;
 		}
 	}
 }

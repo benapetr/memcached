@@ -41,6 +41,7 @@
     <Compile Include="Cache.cs" />
     <Compile Include="Memcache.cs" />
     <Compile Include="Terminal.cs" />
+    <Compile Include="MemcacheCommands.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

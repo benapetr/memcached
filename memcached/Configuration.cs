@@ -46,6 +46,13 @@ namespace memcached
 		/// UDP
 		/// </summary>
 		public static bool UDP = false;
+		/// <summary>
+		/// The global memory limit in MB
+		/// </summary>
+		public static int GlobalMemoryLimit = 512;
+		public static int InstanceMemoryLimit = 64;
+		public static string UserDB = "users";
+		public static bool DescriptiveErrors = true;
 	}
 }
 

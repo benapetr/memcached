@@ -23,15 +23,27 @@ namespace memcached
 		{
 			if (Configuration.Verbosity >= verbosity)
 			{
-				Log ("DEBUG: " + text)
+				Log ("DEBUG: " + text);
 			}
 		}
 
 		public static void Main (string[] args)
 		{
-			Log ("Starting sharp memcached server version " + Configuration.Version);
-			// create a new thread for tcp and start it
-
+			if (!Terminal.Parse (args))
+			{
+				Log ("Starting sharp memcached server version " + Configuration.Version);
+				if (Configuration.Verbosity > 0)
+				{
+					DebugLog ("Verbosity: " + Configuration.Verbosity.ToString());
+				}
+				// create a new thread for tcp and start it
+				Thread tcp = new Thread(Memcache.ListenTCP);
+				tcp.Name = "tcp listener";
+				tcp.Start();
+				Thread udp = new Thread(Memcache.ListenUDP);
+				udp.Name = "udp listener";
+				udp.Start();
+			}
 		}
 	}
 }

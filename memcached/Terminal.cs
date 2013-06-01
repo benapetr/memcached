@@ -17,28 +17,58 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace memcached
 {
-	public class Memcache
+	public class Terminal
 	{
-		/// <summary>
-		/// Listen this instance.
-		/// </summary>
-		public static void ListenUDP()
+		private static void PrintHelp()
 		{
-			if (!Configuration.UDP)
-			{
-				return;
-			}
+			Console.WriteLine("Usage: memcached [-vhpmuadlc]\n\n" +
+			                  "This is an advanced memcache server. See https://github.com/benapetr/memcached for more information.\n\n" +
+			                  "Parameters:\n" +
+			                  "  -v (--verbose): increase verbosity\n" +
+			                  "  -h (--help): display help");
 		}
 
-		public static void ListenTCP()
+		/// <summary>
+		/// Parse the specified args.
+		/// </summary>
+		/// <param name="args">Arguments.</param>
+		public static bool Parse(string[] args)
 		{
-			if (!Configuration.TCP)
+			List<string> parameters = new List<string>();
+			parameters.AddRange(args);
+			foreach(string xx in parameters)
 			{
-				return;
+				if (xx.StartsWith("-v"))
+				{
+					Configuration.Verbosity++;
+					int curr = 2;
+					while (curr < xx.Length)
+					{
+						if (xx[curr] == 'v')
+						{
+							Configuration.Verbosity++;
+						}
+						curr++;
+					}
+				}else
+				{
+					switch(xx)
+					{
+					case "--verbose":
+						Configuration.Verbosity++;
+						break;
+					case "-h":
+					case "--help":
+						PrintHelp();
+						return true;
+					}
+				}
 			}
+			return false;
 		}
 	}
 }

@@ -25,11 +25,18 @@ namespace memcached
 	{
 		private static void PrintHelp()
 		{
-			Console.WriteLine("Usage: memcached [-vhpmuadlc]\n\n" +
+			Console.WriteLine("Usage: memcached [-vh]\n\n" +
 			                  "This is an advanced memcache server. See https://github.com/benapetr/memcached for more information.\n\n" +
 			                  "Parameters:\n" +
 			                  "  -v (--verbose): increase verbosity\n" +
-			                  "  -h (--help): display help");
+			                  "  -h (--help): display help" +
+			                  "  --config-file file: load a configuration file at specified path");
+		}
+
+		private static void Read(string path)
+		{
+			Configuration.ConfigurationFile = path;
+			Configuration.Read();
 		}
 
 		/// <summary>
@@ -40,6 +47,7 @@ namespace memcached
 		{
 			List<string> parameters = new List<string>();
 			parameters.AddRange(args);
+			int i = 0;
 			foreach(string xx in parameters)
 			{
 				if (xx.StartsWith("-v"))
@@ -65,8 +73,17 @@ namespace memcached
 					case "--help":
 						PrintHelp();
 						return true;
+					case "--config-file":
+						if (parameters.Count <= i+1)
+						{
+							Console.WriteLine("Option --config-file is missing a parameter!");
+							return true;
+						}
+						Read(parameters[i+1]);
+						break;
 					}
 				}
+				i++;
 			}
 			return false;
 		}

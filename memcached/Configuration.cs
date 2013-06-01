@@ -17,6 +17,9 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 
 namespace memcached
 {
@@ -53,6 +56,56 @@ namespace memcached
 		public static int InstanceMemoryLimit = 64;
 		public static string UserDB = "users";
 		public static bool DescriptiveErrors = true;
+		public static string ConfigurationFile = null;
+
+		public static void Read()
+		{
+			if (ConfigurationFile == null)
+			{
+				return;
+			}
+
+			if (!File.Exists(ConfigurationFile))
+			{
+				MainClass.Log("There is no config file");
+				return;
+			}
+			
+			XmlDocument file = new XmlDocument();
+			file.Load(ConfigurationFile);
+			
+			foreach (XmlNode item in file.ChildNodes[0])
+			{
+				switch(item.Name.ToLower())
+				{
+					case "authentication":
+						Configuration.Authentication = bool.Parse(item.InnerText);
+						break;
+					case "descriptiveerrors":
+						Configuration.DescriptiveErrors = bool.Parse(item.InnerText);
+					    break;
+					case "port":
+						Configuration.Port = int.Parse(item.InnerText);
+						break;
+					case "globalmemorylimit":
+						Configuration.GlobalMemoryLimit = int.Parse(item.InnerText);
+						break;
+					case "instancememorylimit":
+						Configuration.InstanceMemoryLimit = int.Parse(item.InnerText);
+						break;
+					case "tcp":
+						Configuration.TCP = bool.Parse(item.InnerText);
+						break;
+					case "udp":
+						Configuration.UDP = bool.Parse(item.InnerText);
+						break;
+					case "userdb":
+						Configuration.UserDB = item.InnerText;
+						break;
+					}
+			}
+
+		}
 	}
 }
 

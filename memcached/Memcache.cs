@@ -273,6 +273,7 @@ namespace memcached
                         continue;
                     case "get":
 						Get(parameters, ref Writer, ref Reader, _U);
+						continue;
                     case "gets":
                         Gets(parameters, ref Writer, ref Reader, _U);
                         continue;

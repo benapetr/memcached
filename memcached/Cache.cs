@@ -55,18 +55,16 @@ namespace memcached
             /// <returns>The size.</returns>
             public double getSize()
             {
-				double size = (sizeof(DateTime) * 2) + sizeof(int) + 4 + (2 * IntPtr.Size);
-                if (value == null)
-                {
-                    unsafe
-                    {
-                        return size;
-                    }
-                }
-                unsafe
-                {
+				unsafe
+				{
+					double size = (sizeof(DateTime) * 2) + sizeof(int) + 4 + (2 * IntPtr.Size);
+				
+	                if (value == null)
+	                {
+	                        return size;
+	                }
                     return size + (sizeof(char) * value.Length);
-                }
+				}
             }
         }
 

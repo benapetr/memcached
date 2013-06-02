@@ -20,15 +20,15 @@ using System;
 
 namespace memcached
 {
-	public class User
-	{
-		public string username = null;
-		public string password = null;
+    public class User
+    {
+        public string username = null;
+        public string password = null;
 
-		public User (string name)
-		{
-			username = name;
-		}
-	}
+        public User (string name)
+        {
+            username = name;
+        }
+    }
 }
 

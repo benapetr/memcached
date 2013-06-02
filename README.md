@@ -63,12 +63,11 @@ Descriptive errors
 ==================
 You can enable this in configuration in order to get more descriptive errors which provide you the explanation of what is wrong, instead of ERROR you will receive ERRORNN with number of error. This is disabled by default.
 
-Table
-     ERROR00 Internal error (this means some kind of exception happened inside of server)
-     ERROR01 Authentication failed (wrong username or password)
-     ERROR02 Authentication required (you provided a correct command but you don't have permissions to read or write)
-     ERROR03 Uknown request - the command is not understood by server
-     ERROR04 Out of memory - there isn't enough operating memory to store the data, or you exceeded the limit
-     ERROR05 Invalid values one of the values you provided has incorrect format
-     ERROR06 Missing values - you need to provide all parameters
-     ERROR07 Value is too big
+    ERROR00 Internal error (this means some kind of exception happened inside of server)
+    ERROR01 Authentication failed (wrong username or password)
+    ERROR02 Authentication required (you provided a correct command but you don't have permissions to read or write)
+    ERROR03 Uknown request - the command is not understood by server
+    ERROR04 Out of memory - there isn't enough operating memory to store the data, or you exceeded the limit
+    ERROR05 Invalid values one of the values you provided has incorrect format
+    ERROR06 Missing values - you need to provide all parameters
+    ERROR07 Value is too big

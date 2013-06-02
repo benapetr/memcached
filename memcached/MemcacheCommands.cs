@@ -43,17 +43,20 @@ namespace memcached
             if (part.Count < 4)
             {
                 // invalid format
+				SendError (ErrorCode.MissingValues, ref w);
                 return 1;
             }
 
             key = part[0];
             if (!int.TryParse (part[1], out flags))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
 
             if (!int.TryParse (part[2], out exptime))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
 
@@ -62,8 +65,10 @@ namespace memcached
                 if (size < 0)
                 {
                     // error
+					SendError (ErrorCode.InvalidValues, ref w);
                     return 3;
                 }
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
 
@@ -77,6 +82,7 @@ namespace memcached
             if (chunk.Length > size)
             {
                 // too big
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 4;
             }
 
@@ -142,17 +148,20 @@ namespace memcached
             if (part.Count < 4)
             {
                 // invalid format
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
             key = part[0];
             if (!int.TryParse (part[1], out flags))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
             if (!int.TryParse (part[2], out exptime))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
@@ -161,8 +170,10 @@ namespace memcached
                 if (size < 0)
                 {
                     // error
+					SendError (ErrorCode.InvalidValues, ref w);
                     return 3;
                 }
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
@@ -176,6 +187,7 @@ namespace memcached
             if (chunk.Length > size)
             {
                 // too big
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 4;
             }
 
@@ -268,29 +280,34 @@ namespace memcached
             Send("END", ref w);
         }
 
-        private static int Replace(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
+        private static int cas(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
         {
             string key = null;
             int flags = 0;
             int exptime = 0;
             int size = 0;
+			double CAS = 0;
+
             //<command name> <key> <flags> <exptime> <bytes>
             List<string> part = new List<string>();
             part.AddRange(parameters.Split(' '));
-            if (part.Count < 4)
+            if (part.Count < 5)
             {
                 // invalid format
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
             key = part[0];
             if (!int.TryParse (part[1], out flags))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
             if (!int.TryParse (part[2], out exptime))
             {
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
             
@@ -299,10 +316,18 @@ namespace memcached
                 if (size < 0)
                 {
                     // error
+					SendError (ErrorCode.InvalidValues, ref w);
                     return 3;
                 }
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
+
+			if (!double.TryParse (part[4], out CAS))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return 1;
+			}
             
             // everything is ok let's go
             string chunk = r.ReadLine();
@@ -314,6 +339,7 @@ namespace memcached
             if (chunk.Length > size)
             {
                 // too big
+				SendError (ErrorCode.InvalidValues, ref w);
                 return 4;
             }
             
@@ -321,7 +347,7 @@ namespace memcached
             
             lock (MainClass.GlobalCaches)
             {
-                if (MainClass.GlobalCaches[user].Replace (key, Item))
+                if (MainClass.GlobalCaches[user].ReplaceCas (key, Item, CAS))
                 {
                     if (!parameters.EndsWith ("noreply"))
                     {
@@ -338,6 +364,82 @@ namespace memcached
             
             return 0;
         }
+
+		private static int Replace(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
+		{
+			string key = null;
+			int flags = 0;
+			int exptime = 0;
+			int size = 0;
+			//<command name> <key> <flags> <exptime> <bytes>
+			List<string> part = new List<string>();
+			part.AddRange(parameters.Split(' '));
+			if (part.Count < 4)
+			{
+				// invalid format
+				return 1;
+			}
+			
+			key = part[0];
+			if (!int.TryParse (part[1], out flags))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return 1;
+			}
+			
+			if (!int.TryParse (part[2], out exptime))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return 1;
+			}
+			
+			if (!int.TryParse (part[3], out size))
+			{
+				if (size < 0)
+				{
+					// error
+					SendError (ErrorCode.InvalidValues, ref w);
+					return 3;
+				}
+				SendError (ErrorCode.InvalidValues, ref w);
+				return 1;
+			}
+			
+			// everything is ok let's go
+			string chunk = r.ReadLine();
+			while (chunk.Length < size)
+			{
+				chunk += "\n" + r.ReadLine();
+			}
+			
+			if (chunk.Length > size)
+			{
+				// too big
+				SendError (ErrorCode.ValueTooBig, ref w);
+				return 4;
+			}
+			
+			Cache.Item Item = new Cache.Item(chunk, exptime, flags);
+			
+			lock (MainClass.GlobalCaches)
+			{
+				if (MainClass.GlobalCaches[user].Replace (key, Item))
+				{
+					if (!parameters.EndsWith ("noreply"))
+					{
+						Send ("STORED", ref w);
+					}
+				} else
+				{
+					if (!parameters.EndsWith ("noreply"))
+					{
+						Send ("NOT_STORED", ref w);
+					}
+				}
+			}
+			
+			return 0;
+		}
 
         private static double ToUnix()
         {
@@ -359,6 +461,7 @@ namespace memcached
                 Send ("STAT user " + user.username, ref w);
                 Send ("STAT hash_bytes " + Cache.GlobalSize ().ToString(), ref w);
                 Send ("STAT hashtables " + MainClass.GlobalCaches.Count.ToString (), ref w);
+				Send ("STAT count " + MainClass.GlobalCaches[user].Count().ToString(), ref w);
                 Send ("STAT connections " + MainClass.Connections.ToString (), ref w);
                 Send ("STAT open_connections " + MainClass.OpenConnections.ToString (), ref w);
                 return;

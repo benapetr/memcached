@@ -166,7 +166,7 @@ namespace memcached
             }
         }
 
-        public static long uptime()
+        public static double uptime()
         {
             return (DateTime.Now - st).TotalSeconds;
         }

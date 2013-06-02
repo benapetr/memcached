@@ -57,7 +57,7 @@ namespace memcached
             {
                 unsafe
                 {
-                    double size = (sizeof(DateTime) * 2) + sizeof(int) + 4 + (2 * IntPtr.Size);
+                    double size = (sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + sizeof(double);
                 
                     if (value == null)
                     {
@@ -131,6 +131,14 @@ namespace memcached
                 }
             }
         }
+
+		public int Count()
+		{
+			lock (db)
+			{
+				return db.Count;
+			}
+		}
 
         private void hardSet(string id, Item data)
         {
@@ -213,6 +221,30 @@ namespace memcached
             }
             return false;
         }
+
+		/// <summary>
+		/// Replace the specified key and d.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="d">D.</param>
+		public bool ReplaceCas(string key, Item d, double CAS)
+		{
+			lock (db)
+			{
+				if (db.ContainsKey (key))
+				{
+					if (db[key].cas == CAS)
+					{
+						size = size - db[key].getSize();
+						size += d.getSize();
+						db[key] = d;
+						db[key].update = DateTime.Now;
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 
         /// <summary>
         /// Replace the specified key and d.

@@ -209,67 +209,13 @@ namespace memcached
                         }
                         continue;
                     case "add":
-                        int adrv = Add (parameters, ref Reader, ref Writer, _U);
-                        if (adrv != 0)
-                        {
-                            if (Configuration.DescriptiveErrors)
-                            {
-                                switch (adrv)
-                                {
-                                    case 1:
-                                    case 3:
-                                        SendError (ErrorCode.InvalidValues, ref Writer);
-                                        break;
-                                    case 4:
-                                        SendError (ErrorCode.ValueTooBig, ref Writer);
-                                        break;
-                                }
-                                continue;
-                            }
-                            Send ("ERROR", ref Writer);
-                        }
+                        Add (parameters, ref Reader, ref Writer, _U);
                         continue;
                     case "gset":
-                        int getr = Set (parameters, ref Reader, ref Writer, MainClass.GlobalUser);
-                        if (getr != 0)
-                        {
-                            if (Configuration.DescriptiveErrors)
-                            {
-                                switch (getr)
-                                {
-                                case 1:
-                                case 3:
-                                    SendError (ErrorCode.InvalidValues, ref Writer);
-                                    break;
-                                case 4:
-                                    SendError (ErrorCode.ValueTooBig, ref Writer);
-                                    break;
-                                }
-                                continue;
-                            }
-                            Send ("ERROR", ref Writer);
-                        }
+                        Set (parameters, ref Reader, ref Writer, MainClass.GlobalUser);
                         continue;
                     case "set":
-                        int setr = Set (parameters, ref Reader, ref Writer, _U);
-                        if (setr != 0)
-                        {
-                            if (Configuration.DescriptiveErrors)
-                            {
-                                switch (setr)
-                                {
-                                case 1:
-                                case 3:
-                                    SendError (ErrorCode.InvalidValues, ref Writer);
-                                    break;
-                                case 4:
-                                    SendError (ErrorCode.ValueTooBig, ref Writer);
-                                    break;
-                                }
-                                continue;
-                            }
-                            Send ("ERROR", ref Writer);
-                        }
+                        Set (parameters, ref Reader, ref Writer, _U);
                         continue;
                     case "get":
                         Get(parameters, ref Writer, ref Reader, _U);
@@ -292,10 +238,12 @@ namespace memcached
                     case "touch":
                         TouchData(parameters, ref Writer, _U);
                         continue;
+					case "cas":
+						cas(parameters, ref Reader, ref Writer, _U);
+						continue;
                     case "incr":
                     case "append":
                     case "prepend":
-                    case "cas":
                     case "slabs":
                         SendError(ErrorCode.NotImplemented, ref Writer);
                         continue;
@@ -304,6 +252,11 @@ namespace memcached
                         MainClass.OpenConnections--;
                         return;
                     case "flush_all":
+						if (_U == MainClass.GlobalUser && !Configuration.AllowGlobalFlush)
+						{
+							SendError (ErrorCode.AuthenticationRequired, ref Writer);
+							continue;
+						}
                         cache.Clear();
                         if (!parameters.EndsWith ("noreply"))
                         {

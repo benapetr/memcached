@@ -22,10 +22,19 @@ Once you build the binary, it is recommended to create shell script wrapper like
 
 save it as memcached in the build folder and then you can type
 
-./memcached -h # to display help
-./memcached # to start memcached server with default options
-./memcached --print-conf # to print a configuration file
-./memcached --config-file # to load a config file
+    ./memcached -h # to display help
+    ./memcached # to start memcached server with default options
+    ./memcached --print-conf # to print a configuration file
+    ./memcached --config-file # to load a config file
+
+Authentication
+==============
+
+The memcached has authentication enabled by default, that means, every user has to login before they can write or read the memory, even the shared one. In order to do that you need to provide the authenticate command, for example
+
+    authenticate bob:password\r\n
+
+the response will be either SUCCESS when you log in successfuly or ERROR (ERROR01)
 
 Authentication
 ==============

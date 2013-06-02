@@ -201,7 +201,7 @@ namespace memcached
             return 0;
         }
 
-        private static void Get(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+        private static void Gets(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
         {
             List<string> items = new List<string>();
             if (pars.Contains (" "))
@@ -228,11 +228,44 @@ namespace memcached
                 Cache.Item item = cache.Get (curr);
                 if (item != null)
                 {
-                    Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + "\r\n" + item.value, ref w);
+                    Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + item.cas.ToString() + "\r\n" + item.value, ref w);
                 }
             }
             Send("END", ref w);
         }
+
+		private static void Get(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+		{
+			List<string> items = new List<string>();
+			if (pars.Contains (" "))
+			{
+				items.AddRange(pars.Split (' '));
+			} else
+			{
+				items.Add(pars);
+			}
+			
+			Cache cache = null;
+			
+			lock(MainClass.GlobalCaches)
+			{
+				if (!MainClass.GlobalCaches.ContainsKey(user))
+				{
+					SendError (ErrorCode.InternalError, ref w);
+					return;
+				}
+				cache = MainClass.GlobalCaches[user];
+			}
+			foreach (string curr in items)
+			{
+				Cache.Item item = cache.Get (curr);
+				if (item != null)
+				{
+					Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + "\r\n" + item.value, ref w);
+				}
+			}
+			Send("END", ref w);
+		}
 
         private static int Replace(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
         {

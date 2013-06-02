@@ -272,8 +272,9 @@ namespace memcached
                         }
                         continue;
                     case "get":
+						Get(parameters, ref Writer, ref Reader, _U);
                     case "gets":
-                        Get(parameters, ref Writer, ref Reader, _U);
+                        Gets(parameters, ref Writer, ref Reader, _U);
                         continue;
                     case "gget":
                         Get(parameters, ref Writer, ref Reader, MainClass.GlobalUser);

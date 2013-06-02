@@ -27,6 +27,15 @@ save it as memcached in the build folder and then you can type
 ./memcached --print-conf # to print a configuration file
 ./memcached --config-file # to load a config file
 
+Authentication
+==============
+
+The memcached has authentication enabled by default, that means, every user has to login before they can write or read the memory, even the shared one. In order to do that you need to provide the authenticate command, for example
+
+    authenticate bob:password\r\n
+
+the response will be either SUCCESS when you log in successfuly or ERROR (ERROR01)
+
 Managing users
 ==============
 
@@ -49,3 +58,17 @@ This is a memcache server which support many additional features, primarily it s
 Biggest advantage of this version is that is support different memory hashtables (separate memory stores) and each user has own dedicated hashtable. There is also a shared memory for everyone.
 
 The memory limit and usage can be displayed per user
+
+Descriptive errors
+==================
+You can enable this in configuration in order to get more descriptive errors which provide you the explanation of what is wrong, instead of ERROR you will receive ERRORNN with number of error. This is disabled by default.
+
+Table
+    ERROR00 Internal error (this means some kind of exception happened inside of server)
+    ERROR01 Authentication failed (wrong username or password)
+    ERROR02 Authentication required (you provided a correct command but you don't have permissions to read or write)
+    ERROR03 Uknown request - the command is not understood by server
+    ERROR04 Out of memory - there isn't enough operating memory to store the data, or you exceeded the limit
+    ERROR05 Invalid values one of the values you provided has incorrect format
+    ERROR06 Missing values - you need to provide all parameters
+    ERROR07 Value is too big

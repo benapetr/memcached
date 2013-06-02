@@ -59,6 +59,15 @@ Biggest advantage of this version is that is support different memory hashtables
 
 The memory limit and usage can be displayed per user
 
+ * Authentication
+ * Support for large memory (64bit memory addressing)
+ * More configuration options
+
+Current issues:
+
+ * Doesn't support binary protocol
+ * Doesn't support memory sorting
+
 Descriptive errors
 ==================
 You can enable this in configuration in order to get more descriptive errors which provide you the explanation of what is wrong, instead of ERROR you will receive ERRORNN with number of error. This is disabled by default.

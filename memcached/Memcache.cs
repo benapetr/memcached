@@ -143,12 +143,10 @@ namespace memcached
                 System.IO.StreamReader Reader = new System.IO.StreamReader(ns);
                 string text;
                 bool Authenticated = false;
-                string username = null;
                 User _U = MainClass.GlobalUser;
                 // give the user access to global cache
                 Cache cache = MainClass.GlobalCaches[MainClass.GlobalUser];
                 // save the reference to global cache because we might need it in future
-                Cache globalCache = cache;
                 System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
                 while (connection.Connected && !Reader.EndOfStream)
                 {
@@ -199,7 +197,6 @@ namespace memcached
                         if (user != null)
                         {
                             Send ("SUCCESS", ref Writer);
-                            username = user.username;
                             cache = MainClass.GlobalCaches[user];
                             _U = user;
                             Authenticated = true;

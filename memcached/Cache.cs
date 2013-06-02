@@ -31,7 +31,7 @@ namespace memcached
             public int flags = 0;
             public DateTime update;
             public double cas;
-			private double size = 0;
+			private ulong size = 0;
 
             public Item(string data, int Expiry, int Flags)
             {
@@ -54,7 +54,7 @@ namespace memcached
             /// Gets the size.
             /// </summary>
             /// <returns>The size.</returns>
-            public double getSize()
+            public ulong getSize()
             {
 				if (size != 0)
 				{
@@ -62,14 +62,14 @@ namespace memcached
 				}
                 unsafe
                 {
-                    double xx = (sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + (sizeof(double) * 2);
+                    ulong xx = (ulong)((sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + (sizeof(double) * 2));
                 
                     if (value == null)
                     {
 						size = xx;
 						return size;
                     }
-					size = xx + (sizeof(char) * value.Length);
+					size = xx + (ulong)(sizeof(char) * value.Length);
 					return size;
                 }
             }
@@ -77,9 +77,9 @@ namespace memcached
 
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
-		private static double globalSize = 0;
+		private static ulong globalSize = 0;
 
-		public static double GlobalSize
+		public static ulong GlobalSize
 		{
 			get
 			{
@@ -87,7 +87,7 @@ namespace memcached
 			}
 		}
 
-        private double size = 0;
+        private ulong size = 0;
 
         /// <summary>
         /// Gets the size
@@ -175,10 +175,10 @@ namespace memcached
                     size += data.getSize();
                     return;
                 }
-				double s = db[id].getSize();
+				ulong s = db[id].getSize();
                 size = size - s;
 				globalSize -= s;
-				double s2 = data.getSize();
+				ulong s2 = data.getSize();
 				globalSize += s2;
 				size += s2;
                 db[id].update = DateTime.Now;
@@ -224,7 +224,7 @@ namespace memcached
             {
                 if (db.ContainsKey(key))
                 {
-					double s2 = db[key].getSize();
+					ulong s2 = db[key].getSize();
                     size -= s2;
 					globalSize -= s2;
                     db.Remove (key);
@@ -245,7 +245,7 @@ namespace memcached
             {
                 if (!db.ContainsKey (key))
                 {
-					double s2 =d.getSize();
+					ulong s2 =d.getSize();
                     size += s2;
                     db.Add (key, d);
 					globalSize += s2;
@@ -268,8 +268,8 @@ namespace memcached
 				{
 					if (db[key].cas == CAS)
 					{
-						double s = db[key].getSize();
-						double s2 = d.getSize();
+						ulong s = db[key].getSize();
+						ulong s2 = d.getSize();
 						size = size - s;
 						globalSize -= s;
 						globalSize += s2;
@@ -294,8 +294,8 @@ namespace memcached
             {
                 if (db.ContainsKey (key))
                 {
-					double s = db[key].getSize();
-					double s2 = d.getSize();
+					ulong s = db[key].getSize();
+					ulong s2 = d.getSize();
 					size = size - s;
 					globalSize -= s;
 					globalSize += s2;

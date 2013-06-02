@@ -72,9 +72,9 @@ namespace memcached
         public static string Path = null;
         public static bool AllowGlobalFlush = true;
 
-		public static double GlobalMemoryLimitByteSize = 0;
+		public static ulong GlobalMemoryLimitByteSize = 0;
 
-		public static double InstanceMemoryLimitByteSize = 0;
+		public static ulong InstanceMemoryLimitByteSize = 0;
 
         public static void Read()
         {

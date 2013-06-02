@@ -45,7 +45,7 @@ namespace memcached
 
         private static void Send(string text, ref System.IO.StreamWriter w)
         {
-            w.WriteLine(text);
+            w.Write(text + "\r\n");
             w.Flush();
         }
 
@@ -53,7 +53,7 @@ namespace memcached
         {
             if (!Configuration.DescriptiveErrors)
             {
-                writer.WriteLine ("ERROR");
+                writer.Write ("ERROR\r\n");
                 writer.Flush();
                 return;
             }
@@ -98,9 +98,17 @@ namespace memcached
 
         private static User Authenticate(string parameters)
         {
+			if (parameters.StartsWith(":global"))
+			{
+				return null;
+			}
             if (parameters.Contains (":"))
             {
                 string user = parameters.Substring (0, parameters.IndexOf (":"));
+				if (user == ":global")
+				{
+					return null;
+				}
                 string pswd = parameters.Substring(parameters.IndexOf(":") + 1);
                 lock (MainClass.GlobalCaches)
                 {
@@ -130,9 +138,9 @@ namespace memcached
                 MainClass.DebugLog("Incoming connection from: " + connection.Client.RemoteEndPoint.ToString());
                 MainClass.Connections++;
                 MainClass.OpenConnections++;
+				connection.NoDelay = true;
                 System.Net.Sockets.NetworkStream ns = connection.GetStream();
-                System.IO.StreamReader Reader = new System.IO.StreamReader(ns, System.Text.Encoding.UTF8);
-                System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
+                System.IO.StreamReader Reader = new System.IO.StreamReader(ns);
                 string text;
                 bool Authenticated = false;
                 string username = null;
@@ -141,7 +149,8 @@ namespace memcached
                 Cache cache = MainClass.GlobalCaches[MainClass.GlobalUser];
                 // save the reference to global cache because we might need it in future
                 Cache globalCache = cache;
-                while (!Reader.EndOfStream)
+				System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
+                while (connection.Connected && !Reader.EndOfStream)
                 {
                     text = Reader.ReadLine();
                     string command = text;
@@ -299,8 +308,11 @@ namespace memcached
                             Send ("OK", ref Writer);
                         }
                         continue;
-                    }
+					}
                     SendError (ErrorCode.UnknownRequest, ref Writer);
+					Writer.Flush();
+					Writer.Close ();
+					Writer.Dispose();
                 }
             } catch (Exception fail)
             {

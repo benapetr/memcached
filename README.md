@@ -36,15 +36,6 @@ The memcached has authentication enabled by default, that means, every user has 
 
 the response will be either SUCCESS when you log in successfuly or ERROR (ERROR01)
 
-Authentication
-==============
-
-The memcached has authentication enabled by default, that means, every user has to login before they can write or read the memory, even the shared one. In order to do that you need to provide the authenticate command, for example
-
-    authenticate bob:password\r\n
-
-the response will be either SUCCESS when you log in successfuly or ERROR (ERROR01)
-
 Managing users
 ==============
 

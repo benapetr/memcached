@@ -87,7 +87,10 @@ namespace memcached
                 MainClass.GlobalCaches[user].Set (key, Item);
             }
 
-            Send ("STORED", ref w);
+            if (!parameters.EndsWith ("noreply"))
+            {
+                Send ("STORED", ref w);
+            }
 
             // unknown error
             return 0;
@@ -115,10 +118,16 @@ namespace memcached
 
             if (cache.Delete(key))
             {
-                Send ("DELETED", ref w);
+                if (!pars.EndsWith ("noreply"))
+                {
+                    Send ("DELETED", ref w);
+                }
                 return;
             }
-            Send ("NOT_FOUND", ref w);
+            if (!pars.EndsWith ("noreply"))
+            {
+                Send ("NOT_FOUND", ref w);
+            }
         }
 
         private static int Add(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
@@ -176,10 +185,16 @@ namespace memcached
             {
                 if (MainClass.GlobalCaches[user].Add (key, Item))
                 {
-                    Send ("STORED", ref w);
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send ("STORED", ref w);
+                    }
                 } else
                 {
-                    Send ("NOT_STORED", ref w);
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send ("NOT_STORED", ref w);
+                    }
                 }
             }
 
@@ -274,10 +289,16 @@ namespace memcached
             {
                 if (MainClass.GlobalCaches[user].Replace (key, Item))
                 {
-                    Send ("STORED", ref w);
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send ("STORED", ref w);
+                    }
                 } else
                 {
-                    Send ("NOT_STORED", ref w);
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send ("NOT_STORED", ref w);
+                    }
                 }
             }
             
@@ -303,7 +324,58 @@ namespace memcached
                 Send ("STAT hash_bytes_local " + MainClass.GlobalCaches[user].Size.ToString(), ref w);
                 Send ("STAT user " + user.username, ref w);
                 Send ("STAT hash_bytes " + Cache.GlobalSize ().ToString(), ref w);
+                Send ("STAT hashtables " + MainClass.GlobalCaches.Count.ToString (), ref w);
+                Send ("STAT connections " + MainClass.Connections.ToString (), ref w);
+                Send ("STAT open_connections " + MainClass.OpenConnections.ToString (), ref w);
                 return;
+            }
+        }
+
+        private static void TouchData(string parameters, ref System.IO.StreamWriter Writer, User user)
+        {
+            string key = null;
+            int exptime = 0;
+            //<command name> <key> <flags> <exptime> <bytes>
+            List<string> part = new List<string>();
+            part.AddRange(parameters.Split(' '));
+            if (part.Count < 2)
+            {
+                // invalid format
+                SendError(ErrorCode.MissingValues, ref Writer);
+                return;
+            }
+            
+            key = part[0];
+
+            if (!int.TryParse (part[1], out exptime))
+            {
+                SendError(ErrorCode.MissingValues, ref Writer);
+                return;
+            }
+
+            lock(MainClass.GlobalCaches)
+            {
+                if (!MainClass.GlobalCaches.ContainsKey(user))
+                {
+                    // this should never happen
+                    MainClass.DebugLog("There is no cache for user " + user.username);
+                    SendError(ErrorCode.InternalError, ref Writer);
+                    return;
+                }
+                if (MainClass.GlobalCaches[user].Touch (key, exptime))
+                {
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send ("TOUCHED", ref Writer);
+                    }
+                }
+                else
+                {
+                    if (!parameters.EndsWith ("noreply"))
+                    {
+                        Send("NOT_FOUND", ref Writer);
+                    }
+                }
             }
         }
     }

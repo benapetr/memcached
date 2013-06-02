@@ -98,6 +98,15 @@ namespace memcached
             size = 4;
         }
 
+        public void Clear()
+        {
+            lock(db)
+            {
+                db.Clear();
+                size = 4;
+            }
+        }
+
         public void CleanOld()
         {
             lock (db)
@@ -129,6 +138,7 @@ namespace memcached
                 }
                 size = size - db[id].getSize();
                 size += data.getSize();
+                db[id].update = DateTime.Now;
                 db[id] = data;
             }
         }
@@ -212,6 +222,25 @@ namespace memcached
                     size = size - db[key].getSize();
                     size += d.getSize();
                     db[key] = d;
+                    db[key].update = DateTime.Now;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool Touch(string key, int time)
+        {
+            lock (db)
+            {
+                if (db.ContainsKey (key))
+                {
+                    if (time == 0)
+                    {
+                        db[key].expiry = DateTime.MaxValue;
+                        return true;
+                    }
+                    db[key].expiry = DateTime.Now.AddSeconds (time);
                     return true;
                 }
             }

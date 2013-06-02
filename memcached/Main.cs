@@ -15,6 +15,7 @@ namespace memcached
         public static double BytesReceived = 0;
         public static int Connections = 0;
         public static int OpenConnections = 0;
+        private static FileSystemWatcher watcher;
 
         /// <summary>
         /// Log the specified text.
@@ -43,8 +44,85 @@ namespace memcached
             Log ("EXCEPTION: " + exception.Message + "\n\n" + exception.StackTrace + "\n\n" + exception.Source);
         }
 
+        public static User getUser(string name)
+        {
+            foreach (User user in GlobalCaches.Keys)
+            {
+                if (user.username == name)
+                {
+                    return user;
+                }
+            }
+
+            return null;
+        }
+
+        public static void ReloadUsers(object o, EventArgs e)
+        {
+            if (!File.Exists(Configuration.UserDB))
+            {
+                DebugLog("There is no user db to load users from");
+                return;
+            }
+            DebugLog("Reloading users");
+            List<string> lines = new List<string>();
+            lines.AddRange(File.ReadAllLines(Configuration.UserDB));
+            lock (GlobalCaches)
+            {
+                List<User> remove = new List<User>();
+                foreach (User user in GlobalCaches.Keys)
+                {
+                    if (user.username != ":global")
+                    {
+                        remove.Add(user);
+                    }
+                }
+
+                foreach (string user in lines)
+                {
+                    if (user.Contains (":"))
+                    {
+                        string name = user.Substring(0, user.IndexOf (":"));
+                        string pw = user.Substring(user.IndexOf (":") + 1);
+                        User xx =  getUser(name);
+                        if (xx == null)
+                        {
+                            xx = new User(name);
+                            xx.password = pw;
+                            GlobalCaches.Add (xx, new Cache());
+                            DebugLog("Created cache: " + name);
+                        } else
+                        {
+                            remove.Remove(xx);
+                        }
+                    }
+                    else
+                    {
+                        DebugLog("Invalid record: " + user);
+                    }
+                }
+
+                foreach (User c in remove)
+                {
+                    DebugLog("Removing: " + c.username);
+                    GlobalCaches.Remove(c);
+                }
+            }
+        }
+
         public static void LoadUsers()
         {
+            watcher = new FileSystemWatcher();
+            watcher.Path = Configuration.Path;
+            string filename = Configuration.UserDB;
+            if (filename.Contains (Path.DirectorySeparatorChar.ToString()))
+            {
+                filename = filename.Substring (filename.LastIndexOf(Path.DirectorySeparatorChar.ToString()) +1 );
+            }
+            watcher.Filter = filename;
+            watcher.Changed += new FileSystemEventHandler(ReloadUsers);
+            watcher.Created += new FileSystemEventHandler(ReloadUsers);
+            watcher.EnableRaisingEvents = true;
             if (!File.Exists(Configuration.UserDB))
             {
                 DebugLog("There is no user db to load users from");
@@ -95,6 +173,7 @@ namespace memcached
 
         public static void Main (string[] args)
         {
+            Configuration.Path = Directory.GetCurrentDirectory();
             if (!Terminal.Parse (args))
             {
                 Log ("Starting sharp memcached server version " + Configuration.Version);

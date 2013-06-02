@@ -69,6 +69,7 @@ namespace memcached
         /// The configuration file.
         /// </summary>
         public static string ConfigurationFile = null;
+        public static string Path = null;
 
         public static double GlobalMemoryLimitByteSize
         {
@@ -129,10 +130,13 @@ namespace memcached
                         break;
                     case "userdb":
                         Configuration.UserDB = item.InnerText;
+                        if (Configuration.UserDB.Contains (System.IO.Path.DirectorySeparatorChar.ToString()))
+                        {
+                            Configuration.Path = Configuration.UserDB.Substring (0, Configuration.UserDB.LastIndexOf (System.IO.Path.DirectorySeparatorChar));
+                        }
                         break;
-                    }
+                }
             }
-
         }
     }
 }

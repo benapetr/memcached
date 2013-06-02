@@ -36,7 +36,7 @@ namespace memcached
             }
             try
             {
-
+                MainClass.DebugLog("UDP is not supported in this version");
             } catch (Exception fail)
             {
                 MainClass.exceptionHandler(fail);
@@ -128,6 +128,8 @@ namespace memcached
             {
                 System.Net.Sockets.TcpClient connection = (System.Net.Sockets.TcpClient) data;
                 MainClass.DebugLog("Incoming connection from: " + connection.Client.RemoteEndPoint.ToString());
+                MainClass.Connections++;
+                MainClass.OpenConnections++;
                 System.Net.Sockets.NetworkStream ns = connection.GetStream();
                 System.IO.StreamReader Reader = new System.IO.StreamReader(ns, System.Text.Encoding.UTF8);
                 System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
@@ -160,6 +162,8 @@ namespace memcached
                         {
                         case "set":
                         case "get":
+                        case "gget":
+                        case "gset":
                         case "add":
                         case "replace":
                         case "append":
@@ -169,6 +173,7 @@ namespace memcached
                         case "delete":
                         case "incr":
                         case "decr":
+                        case "flush_all":
                         case "touch":
                         case "slabs":
                             SendError (ErrorCode.AuthenticationRequired, ref Writer);
@@ -177,6 +182,9 @@ namespace memcached
                     }
                     switch (command)
                     {
+                    case "version":
+                        Send ("VERSION sharp-memcached " + Configuration.Version, ref Writer);
+                        continue;
                     case "authenticate":
                         User user = Authenticate (parameters);
                         if (user != null)
@@ -212,6 +220,27 @@ namespace memcached
                             Send ("ERROR", ref Writer);
                         }
                         continue;
+                    case "gset":
+                        int getr = Set (parameters, ref Reader, ref Writer, MainClass.GlobalUser);
+                        if (getr != 0)
+                        {
+                            if (Configuration.DescriptiveErrors)
+                            {
+                                switch (getr)
+                                {
+                                case 1:
+                                case 3:
+                                    SendError (ErrorCode.InvalidValues, ref Writer);
+                                    break;
+                                case 4:
+                                    SendError (ErrorCode.ValueTooBig, ref Writer);
+                                    break;
+                                }
+                                continue;
+                            }
+                            Send ("ERROR", ref Writer);
+                        }
+                        continue;
                     case "set":
                         int setr = Set (parameters, ref Reader, ref Writer, _U);
                         if (setr != 0)
@@ -235,16 +264,22 @@ namespace memcached
                         continue;
                     case "get":
                     case "gets":
-                        Get (parameters, ref Writer, ref Reader, _U);
+                        Get(parameters, ref Writer, ref Reader, _U);
+                        continue;
+                    case "gget":
+                        Get(parameters, ref Writer, ref Reader, MainClass.GlobalUser);
                         continue;
                     case "delete":
-                        Delete (parameters, ref Writer, ref Reader, _U);
+                        Delete(parameters, ref Writer, ref Reader, _U);
                         continue;
                     case "replace":
-                        Replace (parameters, ref Reader, ref Writer, _U);
+                        Replace(parameters, ref Reader, ref Writer, _U);
                         continue;
                     case "stat":
-                        Stats (parameters, ref Writer, _U);
+                        Stats(parameters, ref Writer, _U);
+                        continue;
+                    case "touch":
+                        TouchData(parameters, ref Writer, _U);
                         continue;
                     case "incr":
                     case "append":
@@ -253,6 +288,17 @@ namespace memcached
                     case "slabs":
                         SendError(ErrorCode.NotImplemented, ref Writer);
                         continue;
+                    case "quit":
+                        connection.Close ();
+                        MainClass.OpenConnections--;
+                        return;
+                    case "flush_all":
+                        cache.Clear();
+                        if (!parameters.EndsWith ("noreply"))
+                        {
+                            Send ("OK", ref Writer);
+                        }
+                        continue;
                     }
                     SendError (ErrorCode.UnknownRequest, ref Writer);
                 }
@@ -260,6 +306,7 @@ namespace memcached
             {
                 MainClass.exceptionHandler(fail);
             }
+            MainClass.OpenConnections--;
         }
 
         public static void ListenTCP()

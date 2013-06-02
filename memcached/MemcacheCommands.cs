@@ -228,7 +228,7 @@ namespace memcached
                 Cache.Item item = cache.Get (curr);
                 if (item != null)
                 {
-                    Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + item.cas.ToString() + "\r\n" + item.value, ref w);
+                    Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + " " + item.cas.ToString() + "\r\n" + item.value, ref w);
                 }
             }
             Send("END", ref w);

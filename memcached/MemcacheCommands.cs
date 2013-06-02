@@ -223,15 +223,16 @@ namespace memcached
                 }
                 cache = MainClass.GlobalCaches[user];
             }
+			string data = "";
             foreach (string curr in items)
             {
                 Cache.Item item = cache.Get (curr);
                 if (item != null)
                 {
-                    Send("VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + " " + item.cas.ToString() + "\r\n" + item.value, ref w);
+                    data += "VALUE " + curr + " " + item.flags.ToString() + " " + item.value.Length.ToString() + " " + item.cas.ToString() + "\r\n" + item.value + "\r\n";
                 }
             }
-            Send("END", ref w);
+            Send(data + "END", ref w);
         }
 
 		private static void Get(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)

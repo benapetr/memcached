@@ -235,9 +235,9 @@ namespace memcached
                     case "touch":
                         TouchData(parameters, ref Writer, _U);
                         continue;
-					case "cas":
-						cas(parameters, ref Reader, ref Writer, _U);
-						continue;
+                    case "cas":
+                        cas(parameters, ref Reader, ref Writer, _U);
+                        continue;
                     case "incr":
                     case "append":
                     case "prepend":
@@ -249,11 +249,11 @@ namespace memcached
                         MainClass.OpenConnections--;
                         return;
                     case "flush_all":
-						if (_U == MainClass.GlobalUser && !Configuration.AllowGlobalFlush)
-						{
-							SendError (ErrorCode.AuthenticationRequired, ref Writer);
-							continue;
-						}
+                        if (_U == MainClass.GlobalUser && !Configuration.AllowGlobalFlush)
+                        {
+                            SendError (ErrorCode.AuthenticationRequired, ref Writer);
+                            continue;
+                        }
                         cache.Clear();
                         if (!parameters.EndsWith ("noreply"))
                         {

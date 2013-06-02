@@ -69,13 +69,26 @@ namespace memcached
         /// The configuration file.
         /// </summary>
         public static string ConfigurationFile = null;
+        /// <summary>
+        /// The path.
+        /// </summary>
         public static string Path = null;
+        /// <summary>
+        /// The allow global flush.
+        /// </summary>
         public static bool AllowGlobalFlush = true;
+        /// <summary>
+        /// The size of the global memory limit byte.
+        /// </summary>
+        public static ulong GlobalMemoryLimitByteSize = 0;
+        /// <summary>
+        /// The size of the instance memory limit byte.
+        /// </summary>
+        public static ulong InstanceMemoryLimitByteSize = 0;
 
-		public static ulong GlobalMemoryLimitByteSize = 0;
-
-		public static ulong InstanceMemoryLimitByteSize = 0;
-
+        /// <summary>
+        /// Read this instance.
+        /// </summary>
         public static void Read()
         {
             if (ConfigurationFile == null)

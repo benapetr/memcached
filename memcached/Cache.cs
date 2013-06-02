@@ -26,13 +26,34 @@ namespace memcached
         public class Item
         {
             private static double unique = 0;
+            /// <summary>
+            /// The value.
+            /// </summary>
             public string value = null;
+            /// <summary>
+            /// The expiry.
+            /// </summary>
             public DateTime expiry;
+            /// <summary>
+            /// The flags.
+            /// </summary>
             public int flags = 0;
+            /// <summary>
+            /// The update.
+            /// </summary>
             public DateTime update;
+            /// <summary>
+            /// The cas.
+            /// </summary>
             public double cas;
-			private ulong size = 0;
+            private ulong size = 0;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="memcached.Cache+Item"/> class.
+            /// </summary>
+            /// <param name="data">Data.</param>
+            /// <param name="Expiry">Expiry.</param>
+            /// <param name="Flags">Flags.</param>
             public Item(string data, int Expiry, int Flags)
             {
                 value = data;
@@ -56,36 +77,40 @@ namespace memcached
             /// <returns>The size.</returns>
             public ulong getSize()
             {
-				if (size != 0)
-				{
-					return size;
-				}
+                if (size != 0)
+                {
+                    return size;
+                }
                 unsafe
                 {
                     ulong xx = (ulong)((sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + (sizeof(double) * 2));
                 
                     if (value == null)
                     {
-						size = xx;
-						return size;
+                        size = xx;
+                        return size;
                     }
-					size = xx + (ulong)(sizeof(char) * value.Length);
-					return size;
+                    size = xx + (ulong)(sizeof(char) * value.Length);
+                    return size;
                 }
             }
         }
 
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
-		private static ulong globalSize = 0;
+        private static ulong globalSize = 0;
 
-		public static ulong GlobalSize
-		{
-			get
-			{
-				return globalSize;
-			}
-		}
+        /// <summary>
+        /// Gets the size of the global.
+        /// </summary>
+        /// <value>The size of the global.</value>
+        public static ulong GlobalSize
+        {
+            get
+            {
+                return globalSize;
+            }
+        }
 
         private ulong size = 0;
 
@@ -101,6 +126,10 @@ namespace memcached
             }
         }
 
+        /// <summary>
+        /// Gets the size of the global.
+        /// </summary>
+        /// <returns>The global size.</returns>
         public static double getGlobalSize()
         {
             double s = 0;
@@ -119,25 +148,35 @@ namespace memcached
         /// </summary>
         public Cache ()
         {
-            size = 4;
-			globalSize += 4;
+            size = IntPtr.Size;
+            globalSize += IntPtr.Size;
         }
 
-		~Cache()
-		{
-			globalSize -= 4;
-		}
+        /// <summary>
+        /// Releases unmanaged resources and performs other cleanup operations before the <see cref="memcached.Cache"/> is
+        /// reclaimed by garbage collection.
+        /// </summary>
+        ~Cache()
+        {
+            globalSize -= IntPtr.Size;
+        }
 
+        /// <summary>
+        /// Clear this instance.
+        /// </summary>
         public void Clear()
         {
             lock(db)
             {
-				globalSize -= size - 4;
+                globalSize -= size - IntPtr.Size;
                 db.Clear();
-                size = 4;
+                size = IntPtr.Size;
             }
         }
 
+        /// <summary>
+        /// Cleans the old.
+        /// </summary>
         public void CleanOld()
         {
             lock (db)
@@ -157,13 +196,16 @@ namespace memcached
             }
         }
 
-		public int Count()
-		{
-			lock (db)
-			{
-				return db.Count;
-			}
-		}
+        /// <summary>
+        /// Count this instance.
+        /// </summary>
+        public int Count()
+        {
+            lock (db)
+            {
+                return db.Count;
+            }
+        }
 
         private void hardSet(string id, Item data)
         {
@@ -175,12 +217,12 @@ namespace memcached
                     size += data.getSize();
                     return;
                 }
-				ulong s = db[id].getSize();
+                ulong s = db[id].getSize();
                 size = size - s;
-				globalSize -= s;
-				ulong s2 = data.getSize();
-				globalSize += s2;
-				size += s2;
+                globalSize -= s;
+                ulong s2 = data.getSize();
+                globalSize += s2;
+                size += s2;
                 db[id].update = DateTime.Now;
                 db[id] = data;
             }
@@ -224,9 +266,9 @@ namespace memcached
             {
                 if (db.ContainsKey(key))
                 {
-					ulong s2 = db[key].getSize();
+                    ulong s2 = db[key].getSize();
                     size -= s2;
-					globalSize -= s2;
+                    globalSize -= s2;
                     db.Remove (key);
                     return true;
                 }
@@ -245,43 +287,43 @@ namespace memcached
             {
                 if (!db.ContainsKey (key))
                 {
-					ulong s2 =d.getSize();
+                    ulong s2 =d.getSize();
                     size += s2;
                     db.Add (key, d);
-					globalSize += s2;
+                    globalSize += s2;
                     return true;
                 }
             }
             return false;
         }
 
-		/// <summary>
-		/// Replace the specified key and d.
-		/// </summary>
-		/// <param name="key">Key.</param>
-		/// <param name="d">D.</param>
-		public bool ReplaceCas(string key, Item d, double CAS)
-		{
-			lock (db)
-			{
-				if (db.ContainsKey (key))
-				{
-					if (db[key].cas == CAS)
-					{
-						ulong s = db[key].getSize();
-						ulong s2 = d.getSize();
-						size = size - s;
-						globalSize -= s;
-						globalSize += s2;
-						size += s2;
-						db[key] = d;
-						db[key].update = DateTime.Now;
-						return true;
-					}
-				}
-			}
-			return false;
-		}
+        /// <summary>
+        /// Replace the specified key and d.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <param name="d">D.</param>
+        public bool ReplaceCas(string key, Item d, double CAS)
+        {
+            lock (db)
+            {
+                if (db.ContainsKey (key))
+                {
+                    if (db[key].cas == CAS)
+                    {
+                        ulong s = db[key].getSize();
+                        ulong s2 = d.getSize();
+                        size = size - s;
+                        globalSize -= s;
+                        globalSize += s2;
+                        size += s2;
+                        db[key] = d;
+                        db[key].update = DateTime.Now;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Replace the specified key and d.
@@ -294,12 +336,12 @@ namespace memcached
             {
                 if (db.ContainsKey (key))
                 {
-					ulong s = db[key].getSize();
-					ulong s2 = d.getSize();
-					size = size - s;
-					globalSize -= s;
-					globalSize += s2;
-					size += s2;
+                    ulong s = db[key].getSize();
+                    ulong s2 = d.getSize();
+                    size = size - s;
+                    globalSize -= s;
+                    globalSize += s2;
+                    size += s2;
                     db[key] = d;
                     db[key].update = DateTime.Now;
                     return true;
@@ -308,6 +350,11 @@ namespace memcached
             return false;
         }
 
+        /// <summary>
+        /// Touch the specified key and time.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <param name="time">Time.</param>
         public bool Touch(string key, int time)
         {
             lock (db)

@@ -7,14 +7,38 @@ namespace memcached
 {
     class MainClass
     {
+        /// <summary>
+        /// The is running.
+        /// </summary>
         public static bool isRunning = true;
+        /// <summary>
+        /// global caches.
+        /// </summary>
         public static Dictionary<User, Cache> GlobalCaches = new Dictionary<User, Cache>();
+        /// <summary>
+        /// global user
+        /// </summary>
         public static User GlobalUser = null;
         private static DateTime st;
+        /// <summary>
+        /// The bytes sent.
+        /// </summary>
         public static double BytesSent = 0;
+        /// <summary>
+        /// The bytes received.
+        /// </summary>
         public static double BytesReceived = 0;
+        /// <summary>
+        /// The connections.
+        /// </summary>
         public static int Connections = 0;
+        /// <summary>
+        /// The open connections.
+        /// </summary>
         public static int OpenConnections = 0;
+        /// <summary>
+        /// The watcher.
+        /// </summary>
         private static FileSystemWatcher watcher;
 
         /// <summary>
@@ -39,11 +63,20 @@ namespace memcached
             }
         }
 
+        /// <summary>
+        /// Exceptions the handler.
+        /// </summary>
+        /// <param name="exception">Exception.</param>
         public static void exceptionHandler(Exception exception)
         {
             Log ("EXCEPTION: " + exception.Message + "\n\n" + exception.StackTrace + "\n\n" + exception.Source);
         }
 
+        /// <summary>
+        /// Gets the user.
+        /// </summary>
+        /// <returns>The user.</returns>
+        /// <param name="name">Name.</param>
         public static User getUser(string name)
         {
             foreach (User user in GlobalCaches.Keys)
@@ -57,6 +90,11 @@ namespace memcached
             return null;
         }
 
+        /// <summary>
+        /// Reloads the users.
+        /// </summary>
+        /// <param name="o">O.</param>
+        /// <param name="e">E.</param>
         public static void ReloadUsers(object o, EventArgs e)
         {
             if (!File.Exists(Configuration.UserDB))
@@ -110,6 +148,9 @@ namespace memcached
             }
         }
 
+        /// <summary>
+        /// Loads the users.
+        /// </summary>
         public static void LoadUsers()
         {
             watcher = new FileSystemWatcher();
@@ -166,11 +207,18 @@ namespace memcached
             }
         }
 
+        /// <summary>
+        /// Uptime this instance.
+        /// </summary>
         public static double uptime()
         {
             return (DateTime.Now - st).TotalSeconds;
         }
 
+        /// <summary>
+        /// The entry point of the program, where the program control starts and ends.
+        /// </summary>
+        /// <param name="args">The command-line arguments.</param>
         public static void Main (string[] args)
         {
             Configuration.Path = Directory.GetCurrentDirectory();
@@ -187,8 +235,8 @@ namespace memcached
                     Log ("ERROR: you must enable either tcp or udp");
                     return;
                 }
-				Configuration.InstanceMemoryLimitByteSize = (ulong)Configuration.InstanceMemoryLimit * 1024 * 1024;
-				Configuration.GlobalMemoryLimitByteSize = (ulong)Configuration.GlobalMemoryLimit * 1024 * 1024;
+                Configuration.InstanceMemoryLimitByteSize = (ulong)Configuration.InstanceMemoryLimit * 1024 * 1024;
+                Configuration.GlobalMemoryLimitByteSize = (ulong)Configuration.GlobalMemoryLimit * 1024 * 1024;
                 Thread cleaner = new Thread(GC);
                 cleaner.Start();
                 // we have 1 shared cache for everyone

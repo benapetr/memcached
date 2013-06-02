@@ -25,12 +25,12 @@ namespace memcached
     {
         public class Item
         {
-			private static double unique = 0;
+            private static double unique = 0;
             public string value = null;
             public DateTime expiry;
             public int flags = 0;
             public DateTime update;
-			public double cas;
+            public double cas;
 
             public Item(string data, int Expiry, int Flags)
             {
@@ -42,11 +42,11 @@ namespace memcached
                 {
                     expiry = DateTime.MaxValue;
                 }
-				lock (MainClass.GlobalUser)
-				{
-					unique++;
-					cas = unique;
-				}
+                lock (MainClass.GlobalUser)
+                {
+                    unique++;
+                    cas = unique;
+                }
             }
 
             /// <summary>
@@ -55,16 +55,16 @@ namespace memcached
             /// <returns>The size.</returns>
             public double getSize()
             {
-				unsafe
-				{
-					double size = (sizeof(DateTime) * 2) + sizeof(int) + 4 + (2 * IntPtr.Size);
-				
-	                if (value == null)
-	                {
-	                        return size;
-	                }
+                unsafe
+                {
+                    double size = (sizeof(DateTime) * 2) + sizeof(int) + 4 + (2 * IntPtr.Size);
+                
+                    if (value == null)
+                    {
+                            return size;
+                    }
                     return size + (sizeof(char) * value.Length);
-				}
+                }
             }
         }
 

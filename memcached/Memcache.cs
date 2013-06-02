@@ -98,17 +98,17 @@ namespace memcached
 
         private static User Authenticate(string parameters)
         {
-			if (parameters.StartsWith(":global"))
-			{
-				return null;
-			}
+            if (parameters.StartsWith(":global"))
+            {
+                return null;
+            }
             if (parameters.Contains (":"))
             {
                 string user = parameters.Substring (0, parameters.IndexOf (":"));
-				if (user == ":global")
-				{
-					return null;
-				}
+                if (user == ":global")
+                {
+                    return null;
+                }
                 string pswd = parameters.Substring(parameters.IndexOf(":") + 1);
                 lock (MainClass.GlobalCaches)
                 {
@@ -138,7 +138,7 @@ namespace memcached
                 MainClass.DebugLog("Incoming connection from: " + connection.Client.RemoteEndPoint.ToString());
                 MainClass.Connections++;
                 MainClass.OpenConnections++;
-				connection.NoDelay = true;
+                connection.NoDelay = true;
                 System.Net.Sockets.NetworkStream ns = connection.GetStream();
                 System.IO.StreamReader Reader = new System.IO.StreamReader(ns);
                 string text;
@@ -149,7 +149,7 @@ namespace memcached
                 Cache cache = MainClass.GlobalCaches[MainClass.GlobalUser];
                 // save the reference to global cache because we might need it in future
                 Cache globalCache = cache;
-				System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
+                System.IO.StreamWriter Writer = new System.IO.StreamWriter(ns);
                 while (connection.Connected && !Reader.EndOfStream)
                 {
                     text = Reader.ReadLine();
@@ -272,8 +272,8 @@ namespace memcached
                         }
                         continue;
                     case "get":
-						Get(parameters, ref Writer, ref Reader, _U);
-						continue;
+                        Get(parameters, ref Writer, ref Reader, _U);
+                        continue;
                     case "gets":
                         Gets(parameters, ref Writer, ref Reader, _U);
                         continue;
@@ -310,7 +310,7 @@ namespace memcached
                             Send ("OK", ref Writer);
                         }
                         continue;
-					}
+                    }
                     SendError (ErrorCode.UnknownRequest, ref Writer);
                 }
             } catch (Exception fail)

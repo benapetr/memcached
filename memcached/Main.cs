@@ -168,7 +168,7 @@ namespace memcached
 
         public static long uptime()
         {
-            return (DateTime.Now - st).Seconds;
+            return (DateTime.Now - st).TotalSeconds;
         }
 
         public static void Main (string[] args)

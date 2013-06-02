@@ -70,7 +70,7 @@ namespace memcached
         /// </summary>
         public static string ConfigurationFile = null;
         public static string Path = null;
-		public static bool AllowGlobalFlush = true;
+        public static bool AllowGlobalFlush = true;
 
         public static double GlobalMemoryLimitByteSize
         {
@@ -136,9 +136,9 @@ namespace memcached
                             Configuration.Path = Configuration.UserDB.Substring (0, Configuration.UserDB.LastIndexOf (System.IO.Path.DirectorySeparatorChar));
                         }
                         break;
-					case "allowglobalflush":
-						Configuration.AllowGlobalFlush = bool.Parse(item.InnerText);
-						break;
+                    case "allowglobalflush":
+                        Configuration.AllowGlobalFlush = bool.Parse(item.InnerText);
+                        break;
                 }
             }
         }

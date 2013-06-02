@@ -23,18 +23,18 @@ namespace memcached
 {
     public class Terminal
     {
-		private static void PrintConf()
-		{
-			Console.WriteLine ("<configuration>\n" +
-			                   "  <authentication>"+ Configuration.Authentication.ToString () +"</authentication>\n" +
-			                   "  <allowglobalflush>"+ Configuration.AllowGlobalFlush.ToString () +"</allowglobalflush>\n" +
-			                   "  <descriptiveerrors>"+ Configuration.DescriptiveErrors.ToString () +"</descriptiveerrors>\n" +
-			                   "  <globalmemorylimit>"+ Configuration.GlobalMemoryLimit.ToString () +"</globalmemorylimit>\n" +
-			                   "  <instancememorylimit>"+ Configuration.InstanceMemoryLimit.ToString () +"</instancememorylimit>\n" +
-			                   "  <port>"+ Configuration.Port.ToString () +"</port>\n" +
-			                   "  <userdb>"+ Configuration.UserDB.ToString () +"</userdb>\n" +
-			                   "</configuration>\n");
-		}
+        private static void PrintConf()
+        {
+            Console.WriteLine ("<configuration>\n" +
+                               "  <authentication>"+ Configuration.Authentication.ToString () +"</authentication>\n" +
+                               "  <allowglobalflush>"+ Configuration.AllowGlobalFlush.ToString () +"</allowglobalflush>\n" +
+                               "  <descriptiveerrors>"+ Configuration.DescriptiveErrors.ToString () +"</descriptiveerrors>\n" +
+                               "  <globalmemorylimit>"+ Configuration.GlobalMemoryLimit.ToString () +"</globalmemorylimit>\n" +
+                               "  <instancememorylimit>"+ Configuration.InstanceMemoryLimit.ToString () +"</instancememorylimit>\n" +
+                               "  <port>"+ Configuration.Port.ToString () +"</port>\n" +
+                               "  <userdb>"+ Configuration.UserDB.ToString () +"</userdb>\n" +
+                               "</configuration>\n");
+        }
 
         private static void PrintHelp()
         {
@@ -43,7 +43,7 @@ namespace memcached
                               "Parameters:\n" +
                               "  -v (--verbose): increase verbosity\n" +
                               "  -h (--help): display help\n" +
-			                  "  --print-conf: print a cofiguration file to screen\n" +
+                              "  --print-conf: print a cofiguration file to screen\n" +
                               "  --config-file file: load a configuration file at specified path\n");
         }
 
@@ -95,9 +95,9 @@ namespace memcached
                         }
                         Read(parameters[i+1]);
                         break;
-					case "--print-conf":
-						PrintConf();
-						return true;;
+                    case "--print-conf":
+                        PrintConf();
+                        return true;;
                     }
                 }
                 i++;

@@ -312,9 +312,6 @@ namespace memcached
                         continue;
 					}
                     SendError (ErrorCode.UnknownRequest, ref Writer);
-					Writer.Flush();
-					Writer.Close ();
-					Writer.Dispose();
                 }
             } catch (Exception fail)
             {

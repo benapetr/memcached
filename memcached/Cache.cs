@@ -31,6 +31,7 @@ namespace memcached
             public int flags = 0;
             public DateTime update;
             public double cas;
+			private double size = 0;
 
             public Item(string data, int Expiry, int Flags)
             {
@@ -55,22 +56,39 @@ namespace memcached
             /// <returns>The size.</returns>
             public double getSize()
             {
+				if (size != 0)
+				{
+					return size;
+				}
                 unsafe
                 {
-                    double size = (sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + sizeof(double);
+                    double xx = (sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + (sizeof(double) * 2);
                 
                     if (value == null)
                     {
-                            return size;
+						size = xx;
+						return size;
                     }
-                    return size + (sizeof(char) * value.Length);
+					size = xx + (sizeof(char) * value.Length);
+					return size;
                 }
             }
         }
 
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
+		private static double globalSize = 0;
+
+		public static double GlobalSize
+		{
+			get
+			{
+				return globalSize;
+			}
+		}
+
         private double size = 0;
+
         /// <summary>
         /// Gets the size
         /// </summary>
@@ -83,7 +101,7 @@ namespace memcached
             }
         }
 
-        public static double GlobalSize()
+        public static double getGlobalSize()
         {
             double s = 0;
             lock (MainClass.GlobalCaches)
@@ -102,12 +120,19 @@ namespace memcached
         public Cache ()
         {
             size = 4;
+			globalSize += 4;
         }
+
+		~Cache()
+		{
+			globalSize -= 4;
+		}
 
         public void Clear()
         {
             lock(db)
             {
+				globalSize -= size - 4;
                 db.Clear();
                 size = 4;
             }
@@ -150,8 +175,12 @@ namespace memcached
                     size += data.getSize();
                     return;
                 }
-                size = size - db[id].getSize();
-                size += data.getSize();
+				double s = db[id].getSize();
+                size = size - s;
+				globalSize -= s;
+				double s2 = data.getSize();
+				globalSize += s2;
+				size += s2;
                 db[id].update = DateTime.Now;
                 db[id] = data;
             }
@@ -195,7 +224,9 @@ namespace memcached
             {
                 if (db.ContainsKey(key))
                 {
-                    size = size - db[key].getSize();
+					double s2 = db[key].getSize();
+                    size -= s2;
+					globalSize -= s2;
                     db.Remove (key);
                     return true;
                 }
@@ -214,8 +245,10 @@ namespace memcached
             {
                 if (!db.ContainsKey (key))
                 {
-                    size += d.getSize();
+					double s2 =d.getSize();
+                    size += s2;
                     db.Add (key, d);
+					globalSize += s2;
                     return true;
                 }
             }
@@ -235,8 +268,12 @@ namespace memcached
 				{
 					if (db[key].cas == CAS)
 					{
-						size = size - db[key].getSize();
-						size += d.getSize();
+						double s = db[key].getSize();
+						double s2 = d.getSize();
+						size = size - s;
+						globalSize -= s;
+						globalSize += s2;
+						size += s2;
 						db[key] = d;
 						db[key].update = DateTime.Now;
 						return true;
@@ -257,8 +294,12 @@ namespace memcached
             {
                 if (db.ContainsKey (key))
                 {
-                    size = size - db[key].getSize();
-                    size += d.getSize();
+					double s = db[key].getSize();
+					double s2 = d.getSize();
+					size = size - s;
+					globalSize -= s;
+					globalSize += s2;
+					size += s2;
                     db[key] = d;
                     db[key].update = DateTime.Now;
                     return true;

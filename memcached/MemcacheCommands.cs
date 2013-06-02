@@ -90,6 +90,11 @@ namespace memcached
 
             lock (MainClass.GlobalCaches)
             {
+				if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
+				{
+					SendError(ErrorCode.OutOfMemory, ref w);
+					return 1;
+				}
                 MainClass.GlobalCaches[user].Set (key, Item);
             }
 
@@ -195,6 +200,11 @@ namespace memcached
 
             lock (MainClass.GlobalCaches)
             {
+				if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
+				{
+					SendError(ErrorCode.OutOfMemory, ref w);
+					return 1;
+				}
                 if (MainClass.GlobalCaches[user].Add (key, Item))
                 {
                     if (!parameters.EndsWith ("noreply"))
@@ -347,6 +357,11 @@ namespace memcached
             
             lock (MainClass.GlobalCaches)
             {
+				if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
+				{
+					SendError(ErrorCode.OutOfMemory, ref w);
+					return 1;
+				}
                 if (MainClass.GlobalCaches[user].ReplaceCas (key, Item, CAS))
                 {
                     if (!parameters.EndsWith ("noreply"))
@@ -423,6 +438,11 @@ namespace memcached
 			
 			lock (MainClass.GlobalCaches)
 			{
+				if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
+				{
+					SendError(ErrorCode.OutOfMemory, ref w);
+					return 1;
+				}
 				if (MainClass.GlobalCaches[user].Replace (key, Item))
 				{
 					if (!parameters.EndsWith ("noreply"))
@@ -459,7 +479,7 @@ namespace memcached
                 Send ("STAT user_memory_limit " + Configuration.InstanceMemoryLimitByteSize.ToString(), ref w);
                 Send ("STAT hash_bytes_local " + MainClass.GlobalCaches[user].Size.ToString(), ref w);
                 Send ("STAT user " + user.username, ref w);
-                Send ("STAT hash_bytes " + Cache.GlobalSize ().ToString(), ref w);
+                Send ("STAT hash_bytes " + Cache.GlobalSize.ToString(), ref w);
                 Send ("STAT hashtables " + MainClass.GlobalCaches.Count.ToString (), ref w);
 				Send ("STAT count " + MainClass.GlobalCaches[user].Count().ToString(), ref w);
                 Send ("STAT connections " + MainClass.Connections.ToString (), ref w);
@@ -467,6 +487,17 @@ namespace memcached
                 return;
             }
         }
+
+		private static double FreeSize(Cache cache)
+		{
+			double global = Configuration.GlobalMemoryLimit - Cache.GlobalSize;
+			double local = Configuration.InstanceMemoryLimit - cache.Size;
+			if (global < local)
+			{
+				return global;
+			}
+			return local;
+		}
 
         private static void TouchData(string parameters, ref System.IO.StreamWriter Writer, User user)
         {

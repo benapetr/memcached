@@ -490,8 +490,8 @@ namespace memcached
 
 		private static double FreeSize(Cache cache)
 		{
-			double global = Configuration.GlobalMemoryLimit - Cache.GlobalSize;
-			double local = Configuration.InstanceMemoryLimit - cache.Size;
+			double global = Configuration.GlobalMemoryLimitByteSize - Cache.GlobalSize;
+			double local = Configuration.InstanceMemoryLimitByteSize - cache.Size;
 			if (global < local)
 			{
 				return global;

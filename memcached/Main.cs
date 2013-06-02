@@ -187,6 +187,8 @@ namespace memcached
                     Log ("ERROR: you must enable either tcp or udp");
                     return;
                 }
+				Configuration.InstanceMemoryLimitByteSize = Configuration.InstanceMemoryLimit * 1024 * 1024;
+				Configuration.GlobalMemoryLimitByteSize = Configuration.GlobalMemoryLimit * 1024 * 1024;
                 Thread cleaner = new Thread(GC);
                 cleaner.Start();
                 // we have 1 shared cache for everyone

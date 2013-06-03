@@ -229,7 +229,7 @@ namespace memcached
                     case "replace":
                         Replace(parameters, ref Reader, ref Writer, _U);
                         continue;
-                    case "stat":
+                    case "stats":
                         Stats(parameters, ref Writer, _U);
                         continue;
                     case "touch":

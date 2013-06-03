@@ -62,7 +62,7 @@ namespace memcached
 
             if (!int.TryParse (part[3], out size))
             {
-                if (size < 0)
+                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
                 {
                     // error
                     SendError (ErrorCode.InvalidValues, ref w);
@@ -172,7 +172,7 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (size < 0)
+				if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
                 {
                     // error
                     SendError (ErrorCode.InvalidValues, ref w);
@@ -323,7 +323,7 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (size < 0)
+				if (FreeSize (MainClass.GlobalCaches[user]) < size ||size < 0)
                 {
                     // error
                     SendError (ErrorCode.InvalidValues, ref w);
@@ -410,7 +410,7 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (size < 0)
+				if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
                 {
                     // error
                     SendError (ErrorCode.InvalidValues, ref w);
@@ -470,6 +470,11 @@ namespace memcached
         {
             if (parameters == "")
             {
+				Cache cache;
+				lock (MainClass.GlobalCaches)
+				{
+					cache = MainClass.GlobalCaches[user];
+				}
                 Send ("STAT pid " + System.Diagnostics.Process.GetCurrentProcess ().Id.ToString (), ref w);
                 Send ("STAT uptime " + MainClass.uptime ().ToString (), ref w);
                 Send ("STAT time " + ToUnix().ToString(), ref w);
@@ -477,13 +482,28 @@ namespace memcached
                 Send ("STAT pointer_size " + IntPtr.Size.ToString(), ref w);
                 Send ("STAT global_memory_limit " + Configuration.GlobalMemoryLimitByteSize.ToString(), ref w);
                 Send ("STAT user_memory_limit " + Configuration.InstanceMemoryLimitByteSize.ToString(), ref w);
-                Send ("STAT hash_bytes_local " + MainClass.GlobalCaches[user].Size.ToString(), ref w);
+                Send ("STAT hash_bytes_local " + cache.Size.ToString(), ref w);
                 Send ("STAT user " + user.username, ref w);
                 Send ("STAT hash_bytes " + Cache.GlobalSize.ToString(), ref w);
                 Send ("STAT hashtables " + MainClass.GlobalCaches.Count.ToString (), ref w);
-                Send ("STAT count " + MainClass.GlobalCaches[user].Count().ToString(), ref w);
-                Send ("STAT connections " + MainClass.Connections.ToString (), ref w);
-                Send ("STAT open_connections " + MainClass.OpenConnections.ToString (), ref w);
+                Send ("STAT curr_items " + cache.Count().ToString(), ref w);
+                Send ("STAT total_connections " + MainClass.Connections.ToString (), ref w);
+                Send ("STAT curr_connections " + MainClass.OpenConnections.ToString (), ref w);
+				Send ("STAT cmd_get " + cache.cmd_get.ToString(), ref w);
+				Send ("STAT cmd_set " + cache.cmd_set.ToString (), ref w);
+				Send ("STAT cmd_flush " + cache.cmd_flush.ToString(), ref w);
+				Send ("STAT cmd_touch " + cache.cmd_touch.ToString(), ref w);
+				Send ("STAT get_hits " + cache.get_hits.ToString(), ref w);
+				Send ("STAT get_misses " + cache.get_misses.ToString(), ref w);
+				Send ("STAT delete_misses " + cache.delete_misses.ToString(), ref w);
+				Send ("STAT delete_hits " + cache.delete_hits.ToString(), ref w);
+				Send ("STAT incr_misses " + cache.incr_misses.ToString(), ref w);
+				Send ("STAT incr_hits " + cache.incr_hits.ToString(), ref w);
+				Send ("STAT decr_misses " + cache.decr_misses.ToString(), ref w);
+				Send ("STAT decr_hits " + cache.decr_hits.ToString(), ref w);
+				Send ("STAT cas_hits " + cache.cas_hits.ToString(), ref w);
+				Send ("STAT cas_misses " + cache.cas_misses.ToString(), ref w);
+
                 return;
             }
         }

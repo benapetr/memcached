@@ -100,6 +100,20 @@ namespace memcached
             }
         }
 
+		public int cmd_get = 0;
+		public int cmd_set = 0;
+		public int cmd_flush = 0;
+		public int cmd_touch = 0;
+		public int get_hits = 0;
+		public int get_misses = 0;
+		public int delete_misses = 0;
+		public int delete_hits = 0;
+		public int incr_misses = 0;
+		public int incr_hits = 0;
+		public int decr_misses = 0;
+		public int decr_hits = 0;
+		public int cas_misses = 0;
+		public int cas_hits = 0;
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
         private static ulong globalSize = 0;
@@ -152,8 +166,8 @@ namespace memcached
         /// </summary>
         public Cache ()
         {
-            size = IntPtr.Size;
-            globalSize += IntPtr.Size;
+            size = (ulong)IntPtr.Size;
+            globalSize += (ulong)IntPtr.Size;
         }
 
         /// <summary>
@@ -162,7 +176,7 @@ namespace memcached
         /// </summary>
         ~Cache()
         {
-            globalSize -= IntPtr.Size;
+            globalSize -= (ulong)IntPtr.Size;
         }
 
         /// <summary>
@@ -170,11 +184,12 @@ namespace memcached
         /// </summary>
         public void Clear()
         {
+			cmd_flush++;
             lock(db)
             {
-                globalSize -= size - IntPtr.Size;
+                globalSize -= size - (ulong)IntPtr.Size;
                 db.Clear();
-                size = IntPtr.Size;
+                size = (ulong)IntPtr.Size;
             }
         }
 
@@ -241,6 +256,7 @@ namespace memcached
         /// <param name="value">Value.</param>
         public bool Set(string key, Item value)
         {
+			cmd_set++;
             hardSet (key, value);
             return true;
         }
@@ -251,6 +267,7 @@ namespace memcached
         /// <param name="key">Key.</param>
         public Item Get(string key)
         {
+			cmd_get++;
             lock (db)
             {
                 if (db.ContainsKey(key))
@@ -276,8 +293,10 @@ namespace memcached
                     size -= s2;
                     globalSize -= s2;
                     db.Remove (key);
+					delete_hits++;
                     return true;
                 }
+				delete_misses++;
                 return false;
             }
         }
@@ -363,6 +382,7 @@ namespace memcached
         /// <param name="time">Time.</param>
         public bool Touch(string key, int time)
         {
+			cmd_touch++;
             lock (db)
             {
                 if (db.ContainsKey (key))

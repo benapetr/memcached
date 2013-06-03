@@ -83,7 +83,11 @@ namespace memcached
                 }
                 unsafe
                 {
-                    ulong xx = (ulong)((sizeof(DateTime) * 2) + sizeof(int) + (2 * IntPtr.Size) + (sizeof(double) * 2));
+                    ulong xx = (ulong)((sizeof(DateTime) * 2) + 
+					                   sizeof(int) +
+					                   sizeof (ulong) +
+					                   (2 * IntPtr.Size) +
+					                   sizeof(double));
                 
                     if (value == null)
                     {
@@ -214,15 +218,17 @@ namespace memcached
                 if (!db.ContainsKey (id))
                 {
                     db.Add(id, data);
-                    size += data.getSize();
+					ulong s6 = data.getSize();
+                    size += s6;
+					globalSize += s6;
                     return;
                 }
                 ulong s = db[id].getSize();
-                size = size - s;
+				ulong s2 = data.getSize();
+				globalSize += s2;
+				size += s2;
+                size -= s;
                 globalSize -= s;
-                ulong s2 = data.getSize();
-                globalSize += s2;
-                size += s2;
                 db[id].update = DateTime.Now;
                 db[id] = data;
             }
@@ -312,10 +318,10 @@ namespace memcached
                     {
                         ulong s = db[key].getSize();
                         ulong s2 = d.getSize();
+						globalSize += s2;
+						size += s2;
                         size = size - s;
                         globalSize -= s;
-                        globalSize += s2;
-                        size += s2;
                         db[key] = d;
                         db[key].update = DateTime.Now;
                         return true;
@@ -338,10 +344,10 @@ namespace memcached
                 {
                     ulong s = db[key].getSize();
                     ulong s2 = d.getSize();
+					globalSize += s2;
+					size += s2;
                     size = size - s;
                     globalSize -= s;
-                    globalSize += s2;
-                    size += s2;
                     db[key] = d;
                     db[key].update = DateTime.Now;
                     return true;

@@ -27,6 +27,12 @@ save it as memcached in the build folder and then you can type
     ./memcached --print-conf # to print a configuration file
     ./memcached --config-file # to load a config file
 
+example
+
+    ./memcached --print-conf > memcache.cfg
+    # now edit the configuration file to your needs
+    ./memcached --config-file memcache.cfg
+
 Authentication
 ==============
 
@@ -67,9 +73,11 @@ Current issues:
 
  * Doesn't support binary protocol
  * Doesn't support memory sorting
+ * Commands that aren't implemented yet: append, prepend, incr, decr (high priority issue)
 
 Descriptive errors
 ==================
+
 You can enable this in configuration in order to get more descriptive errors which provide you the explanation of what is wrong, instead of ERROR you will receive ERRORNN with number of error. This is disabled by default.
 
     ERROR00 Internal error (this means some kind of exception happened inside of server)
@@ -80,3 +88,8 @@ You can enable this in configuration in order to get more descriptive errors whi
     ERROR05 Invalid values one of the values you provided has incorrect format
     ERROR06 Missing values - you need to provide all parameters
     ERROR07 Value is too big
+
+Support
+=======
+
+In case you need any help or you want to report a bug, please contact me at benapetr@gmail.com

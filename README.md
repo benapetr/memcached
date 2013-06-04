@@ -73,7 +73,6 @@ Current issues:
 
  * Doesn't support binary protocol
  * Doesn't support memory sorting
- * Commands that aren't implemented yet: append, prepend, incr, decr (high priority issue)
 
 Descriptive errors
 ==================

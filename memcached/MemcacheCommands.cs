@@ -38,9 +38,9 @@ namespace memcached
             int exptime = 0;
             int size = 0;
             //<command name> <key> <flags> <exptime> <bytes>
-            List<string> part = new List<string>();
-            part.AddRange(parameters.Split(' '));
-            if (part.Count < 4)
+            string[] part = null;
+            part = parameters.Split(' ');
+            if (part.Length < 4)
             {
                 // invalid format
                 SendError (ErrorCode.MissingValues, ref w);
@@ -148,9 +148,9 @@ namespace memcached
             int exptime = 0;
             int size = 0;
             //<command name> <key> <flags> <exptime> <bytes>
-            List<string> part = new List<string>();
-            part.AddRange(parameters.Split(' '));
-            if (part.Count < 4)
+            string[] part = null;
+            part = parameters.Split(' ');
+            if (part.Length < 4)
             {
                 // invalid format
                 SendError (ErrorCode.InvalidValues, ref w);
@@ -223,15 +223,187 @@ namespace memcached
             return 0;
         }
 
+		private static void decrement(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+		{
+			if (!pars.Contains (" "))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			string[] values = pars.Split (' ');
+			
+			if (values.Length < 2)
+			{
+				SendError (ErrorCode.MissingValues, ref w);
+				return;
+			}
+			
+			string key = values[0];
+			int jump;
+			
+			if (!int.TryParse (values[1], out jump))
+			{
+				SendError(ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			Cache cache = MainClass.GlobalCaches[user];
+			
+			Cache.Item item = cache.Get (key, true);
+			
+			if (item == null)
+			{
+				Send ("NOT_FOUND", ref w);
+				return;
+			}
+			
+			int current;
+			
+			if (!int.TryParse (item.value, out current))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			current -= jump;
+			
+			cache.hardSet (key, new Cache.Item(current.ToString (), item.expiry, item.flags));
+			Send (current.ToString (), ref w);
+		}
+
+		private static void Append(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+		{
+			if (!pars.Contains (" "))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			string[] part = pars.Split (' ');
+			
+			if (part.Length < 4)
+			{
+				SendError (ErrorCode.MissingValues, ref w);
+				return;
+			}
+			
+			string key = part[0];
+			int flags = 0;
+			int exptime = 0;
+			int size = 0;
+			//<command name> <key> <flags> <exptime> <bytes>
+
+			if (!int.TryParse (part[1], out flags))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			if (!int.TryParse (part[2], out exptime))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			if (!int.TryParse (part[3], out size))
+			{
+				if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+				{
+					// error
+					SendError (ErrorCode.InvalidValues, ref w);
+					return;
+				}
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			// everything is ok let's go
+			string chunk = r.ReadLine();
+			while (chunk.Length < size)
+			{
+				chunk += "\n" + r.ReadLine();
+			}
+			
+			if (chunk.Length > size)
+			{
+				// too big
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			Cache cache = MainClass.GlobalCaches[user];
+			
+			Cache.Item item = cache.Get (key, true);
+			
+			if (item == null)
+			{
+				Send ("NOT_FOUND", ref w);
+				return;
+			}
+			
+			cache.hardSet (key, new Cache.Item(item.value + chunk, item.expiry, item.flags));
+			Send ("STORED", ref w);
+		}
+
+		private static void increment(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+		{
+			if (!pars.Contains (" "))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+
+			string[] values = pars.Split (' ');
+
+			if (values.Length < 2)
+			{
+				SendError (ErrorCode.MissingValues, ref w);
+				return;
+			}
+
+			string key = values[0];
+			int jump;
+
+			if (!int.TryParse (values[1], out jump))
+			{
+				SendError(ErrorCode.InvalidValues, ref w);
+				return;
+			}
+
+			Cache cache = MainClass.GlobalCaches[user];
+
+			Cache.Item item = cache.Get (key, true);
+
+			if (item == null)
+			{
+				Send ("NOT_FOUND", ref w);
+				return;
+			}
+
+			int current;
+
+			if (!int.TryParse (item.value, out current))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+
+			current += jump;
+
+			cache.hardSet (key, new Cache.Item(current.ToString (), item.expiry, item.flags));
+			Send (current.ToString (), ref w);
+		}
+
         private static void Gets(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
         {
-            List<string> items = new List<string>();
+            string[] items = null;
             if (pars.Contains (" "))
             {
-                items.AddRange(pars.Split (' '));
+                items = pars.Split (' ');
             } else
             {
-                items.Add(pars);
+				items = new string[] {pars};
             }
 
             Cache cache = null;
@@ -259,13 +431,13 @@ namespace memcached
 
         private static void Get(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
         {
-            List<string> items = new List<string>();
+            string[] items = null;
             if (pars.Contains (" "))
             {
-                items.AddRange(pars.Split (' '));
+                items = pars.Split (' ');
             } else
             {
-                items.Add(pars);
+				items = new string[]{ pars };
             }
             
             Cache cache = null;
@@ -290,6 +462,80 @@ namespace memcached
             Send("END", ref w);
         }
 
+		private static void Prepend(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
+		{
+			if (!pars.Contains (" "))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			string[] part = pars.Split (' ');
+			
+			if (part.Length < 4)
+			{
+				SendError (ErrorCode.MissingValues, ref w);
+				return;
+			}
+			
+			string key = part[0];
+			int flags = 0;
+			int exptime = 0;
+			int size = 0;
+			//<command name> <key> <flags> <exptime> <bytes>
+			
+			if (!int.TryParse (part[1], out flags))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			if (!int.TryParse (part[2], out exptime))
+			{
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			if (!int.TryParse (part[3], out size))
+			{
+				if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+				{
+					// error
+					SendError (ErrorCode.InvalidValues, ref w);
+					return;
+				}
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			// everything is ok let's go
+			string chunk = r.ReadLine();
+			while (chunk.Length < size)
+			{
+				chunk += "\n" + r.ReadLine();
+			}
+			
+			if (chunk.Length > size)
+			{
+				// too big
+				SendError (ErrorCode.InvalidValues, ref w);
+				return;
+			}
+			
+			Cache cache = MainClass.GlobalCaches[user];
+			
+			Cache.Item item = cache.Get (key, true);
+			
+			if (item == null)
+			{
+				Send ("NOT_FOUND", ref w);
+				return;
+			}
+			
+			cache.hardSet (key, new Cache.Item(chunk + item.value, item.expiry, item.flags));
+			Send ("STORED", ref w);
+		}
+
         private static int cas(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
         {
             string key = null;
@@ -299,9 +545,9 @@ namespace memcached
             double CAS = 0;
 
             //<command name> <key> <flags> <exptime> <bytes>
-            List<string> part = new List<string>();
-            part.AddRange(parameters.Split(' '));
-            if (part.Count < 5)
+            string[] part = null;
+            part = parameters.Split(' ');
+            if (part.Length < 5)
             {
                 // invalid format
                 SendError (ErrorCode.InvalidValues, ref w);
@@ -524,9 +770,9 @@ namespace memcached
             string key = null;
             int exptime = 0;
             //<command name> <key> <flags> <exptime> <bytes>
-            List<string> part = new List<string>();
-            part.AddRange(parameters.Split(' '));
-            if (part.Count < 2)
+			string[] part;
+            part = parameters.Split(' ');
+            if (part.Length < 2)
             {
                 // invalid format
                 SendError(ErrorCode.MissingValues, ref Writer);

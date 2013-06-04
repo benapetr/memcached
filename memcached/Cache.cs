@@ -71,6 +71,19 @@ namespace memcached
                 }
             }
 
+			public Item(string data, DateTime Expiry, int Flags)
+			{
+				value = data;
+				flags = Flags;
+				expiry = Expiry;
+				update = DateTime.Now;
+				lock (MainClass.GlobalUser)
+				{
+					unique++;
+					cas = unique;
+				}
+			}
+
             /// <summary>
             /// Gets the size.
             /// </summary>
@@ -226,7 +239,7 @@ namespace memcached
             }
         }
 
-        private void hardSet(string id, Item data)
+        public void hardSet(string id, Item data)
         {
             lock (db)
             {
@@ -265,9 +278,13 @@ namespace memcached
         /// Get the specified key.
         /// </summary>
         /// <param name="key">Key.</param>
-        public Item Get(string key)
+		/// <param name="ns">Skip the counter</param>
+        public Item Get(string key, bool ns = false)
         {
-			cmd_get++;
+			if (!ns)
+			{
+				cmd_get++;
+			}
             lock (db)
             {
                 if (db.ContainsKey(key))

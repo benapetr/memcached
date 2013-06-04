@@ -239,8 +239,17 @@ namespace memcached
                         cas(parameters, ref Reader, ref Writer, _U);
                         continue;
                     case "incr":
+						increment(parameters, ref Writer, ref Reader, _U);
+						continue;
+					case "decr":
+						decrement(parameters, ref Writer, ref Reader, _U);
+						continue;
                     case "append":
+						Append (parameters, ref Writer, ref Reader, _U);
+						continue;
                     case "prepend":
+						Prepend (parameters, ref Writer, ref Reader, _U);
+						continue;
                     case "slabs":
                         SendError(ErrorCode.NotImplemented, ref Writer);
                         continue;

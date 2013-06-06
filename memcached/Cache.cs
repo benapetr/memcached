@@ -285,13 +285,17 @@ namespace memcached
             {
                 cmd_get++;
             }
+
             lock (db)
             {
                 if (db.ContainsKey(key))
                 {
+                    get_hits++;
                     return db[key];
                 }
             }
+
+            get_misses++;
 
             return null;
         }

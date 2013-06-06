@@ -190,7 +190,7 @@ namespace memcached
                     switch (command)
                     {
                     case "version":
-                        Send ("VERSION sharp-memcached " + Configuration.Version, ref Writer);
+                        Send ("VERSION sharp-memcached" + Configuration.Version, ref Writer);
                         continue;
                     case "authenticate":
                         User user = Authenticate (parameters);

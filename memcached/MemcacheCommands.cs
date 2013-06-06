@@ -66,15 +66,16 @@ namespace memcached
                 return 1;
             }
 
-            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            if (size < 0)
             {
-                // we don't have enough free size let's try to free some
-                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
-                {
-                    // error
-                    SendError (ErrorCode.OutOfMemory, ref w);
-                    return 3;
-                }
+                SendError (ErrorCode.InvalidValues, ref w);
+                return 1;
+            }
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return 3;
             }
 
             // everything is ok let's go
@@ -98,7 +99,7 @@ namespace memcached
                 if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
                 {
                     // we don't have enough free size let's try to free some
-                    if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                    if (!MainClass.GlobalCaches[user].FreeSpace(Item.getSize ()))
                     {
                         // error
                         SendError (ErrorCode.OutOfMemory, ref w);
@@ -186,15 +187,17 @@ namespace memcached
                 return 1;
             }
 
-            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            if (size < 0)
             {
-                // we don't have enough free size let's try to free some
-                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
-                {
-                    // error
-                    SendError (ErrorCode.OutOfMemory, ref w);
-                    return 3;
-                }
+                SendError (ErrorCode.InvalidValues, ref w);
+                return 1;
+            }
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                // error
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return 3;
             }
 
             
@@ -215,12 +218,18 @@ namespace memcached
             Cache.Item Item = new Cache.Item(chunk, exptime, flags);
 
             lock (MainClass.GlobalCaches)
-            {
+            { 
                 if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
                 {
-                    SendError(ErrorCode.OutOfMemory, ref w);
-                    return 1;
+                    // we don't have enough free size let's try to free some
+                    if (!MainClass.GlobalCaches[user].FreeSpace(Item.getSize ()))
+                    {
+                        // error
+                        SendError (ErrorCode.OutOfMemory, ref w);
+                        return 1;
+                    }
                 }
+
                 if (MainClass.GlobalCaches[user].Add (key, Item))
                 {
                     if (!parameters.EndsWith ("noreply"))
@@ -328,17 +337,19 @@ namespace memcached
                 return;
             }
 
-            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            if (size < 0)
             {
-                // we don't have enough free size let's try to free some
-                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
-                {
-                    // error
-                    SendError (ErrorCode.OutOfMemory, ref w);
-                    return;
-                }
+                SendError (ErrorCode.InvalidValues, ref w);
+                return;
             }
-            
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                // error
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return;
+            }
+
             // everything is ok let's go
             string chunk = r.ReadLine();
             while (chunk.Length < size)
@@ -362,8 +373,21 @@ namespace memcached
                 Send ("NOT_FOUND", ref w);
                 return;
             }
+
+            Cache.Item replacement = new Cache.Item(item.value + chunk, item.expiry, item.flags);
+
+            if (FreeSize (cache) < replacement.getSize())
+            {
+                // we don't have enough free size let's try to free some
+                if (!cache.FreeSpace(replacement.getSize()))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return;
+                }
+            }
             
-            cache.hardSet (key, new Cache.Item(item.value + chunk, item.expiry, item.flags));
+            cache.hardSet (key, replacement);
             if (!pars.EndsWith("noreply"))
             {
                 Send ("STORED", ref w);
@@ -526,17 +550,19 @@ namespace memcached
                 return;
             }
 
-            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            if (size < 0)
             {
-                // we don't have enough free size let's try to free some
-                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
-                {
-                    // error
-                    SendError (ErrorCode.OutOfMemory, ref w);
-                    return;
-                }
+                SendError (ErrorCode.InvalidValues, ref w);
+                return;
             }
-            
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                // error
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return;
+            }
+
             // everything is ok let's go
             string chunk = r.ReadLine();
             while (chunk.Length < size)
@@ -560,8 +586,23 @@ namespace memcached
                 Send ("NOT_FOUND", ref w);
                 return;
             }
+
+            Cache.Item replacement = new Cache.Item(item.value + chunk, item.expiry, item.flags);
+
+            if (FreeSize (cache) < replacement.getSize())
+            {
+                // we don't have enough free size let's try to free some
+                if (!cache.FreeSpace(replacement.getSize()))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return;
+                }
+            }
+
+            cache.hardSet (key, replacement);
             
-            cache.hardSet (key, new Cache.Item(chunk + item.value, item.expiry, item.flags));
+
             if (!pars.EndsWith("noreply"))
             {
                 Send ("STORED", ref w);
@@ -601,14 +642,21 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size ||size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return 3;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
+            }
+
+            if (size < 0)
+            {
+                SendError (ErrorCode.InvalidValues, ref w);
+                return 1;
+            }
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                // error
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return 3;
             }
 
             if (!double.TryParse (part[4], out CAS))
@@ -692,15 +740,17 @@ namespace memcached
                 return 1;
             }
 
-            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            if (size < 0)
             {
-                // we don't have enough free size let's try to free some
-                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
-                {
-                    // error
-                    SendError (ErrorCode.OutOfMemory, ref w);
-                    return 3;
-                }
+                SendError (ErrorCode.InvalidValues, ref w);
+                return 1;
+            }
+
+            if (size > Configuration.InstanceMemoryLimit)
+            {
+                // error
+                SendError (ErrorCode.OutOfMemory, ref w);
+                return 3;
             }
  
             // everything is ok let's go
@@ -723,8 +773,13 @@ namespace memcached
             {
                 if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
                 {
-                    SendError(ErrorCode.OutOfMemory, ref w);
-                    return 1;
+                    // we don't have enough free size let's try to free some
+                    if (!MainClass.GlobalCaches[user].FreeSpace(Item.getSize ()))
+                    {
+                        // error
+                        SendError (ErrorCode.OutOfMemory, ref w);
+                        return 1;
+                    }
                 }
                 if (MainClass.GlobalCaches[user].Replace (key, Item))
                 {

@@ -238,10 +238,10 @@ namespace memcached
                 {
                     if (item.Value.expiry == DateTime.MaxValue)
                     {
-                        ulong size = item.Value.getSize();
-                        globalSize -= size;
-                        size -= size;
-                        Current += size;
+                        ulong s = item.Value.getSize();
+                        globalSize -= s;
+                        size -= s;
+                        Current += s;
                         deleted.Add(item.Key);
                         if (Current > Required)
                         {

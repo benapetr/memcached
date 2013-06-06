@@ -343,7 +343,10 @@ namespace memcached
             }
             
             cache.hardSet (key, new Cache.Item(item.value + chunk, item.expiry, item.flags));
-            Send ("STORED", ref w);
+            if (!pars.EndsWith("noreply"))
+            {
+                Send ("STORED", ref w);
+            }
         }
 
         private static void increment(string pars, ref System.IO.StreamWriter w, ref System.IO.StreamReader r, User user)
@@ -533,7 +536,10 @@ namespace memcached
             }
             
             cache.hardSet (key, new Cache.Item(chunk + item.value, item.expiry, item.flags));
-            Send ("STORED", ref w);
+            if (!pars.EndsWith("noreply"))
+            {
+                Send ("STORED", ref w);
+            }
         }
 
         private static int cas(string parameters, ref System.IO.StreamReader r, ref System.IO.StreamWriter w, User user)
@@ -725,7 +731,7 @@ namespace memcached
                 Send ("STAT uptime " + MainClass.uptime ().ToString (), ref w);
                 Send ("STAT time " + ToUnix().ToString(), ref w);
                 Send ("STAT version sharp memcached " + Configuration.Version, ref w);
-                Send ("STAT pointer_size " + IntPtr.Size.ToString(), ref w);
+                Send ("STAT pointer_size " + (IntPtr.Size * 8).ToString(), ref w);
                 Send ("STAT global_memory_limit " + Configuration.GlobalMemoryLimitByteSize.ToString(), ref w);
                 Send ("STAT user_memory_limit " + Configuration.InstanceMemoryLimitByteSize.ToString(), ref w);
                 Send ("STAT hash_bytes_local " + cache.Size.ToString(), ref w);

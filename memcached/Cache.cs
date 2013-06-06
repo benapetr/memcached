@@ -71,18 +71,18 @@ namespace memcached
                 }
             }
 
-			public Item(string data, DateTime Expiry, int Flags)
-			{
-				value = data;
-				flags = Flags;
-				expiry = Expiry;
-				update = DateTime.Now;
-				lock (MainClass.GlobalUser)
-				{
-					unique++;
-					cas = unique;
-				}
-			}
+            public Item(string data, DateTime Expiry, int Flags)
+            {
+                value = data;
+                flags = Flags;
+                expiry = Expiry;
+                update = DateTime.Now;
+                lock (MainClass.GlobalUser)
+                {
+                    unique++;
+                    cas = unique;
+                }
+            }
 
             /// <summary>
             /// Gets the size.
@@ -97,10 +97,10 @@ namespace memcached
                 unsafe
                 {
                     ulong xx = (ulong)((sizeof(DateTime) * 2) + 
-					                   sizeof(int) +
-					                   sizeof (ulong) +
-					                   (2 * IntPtr.Size) +
-					                   sizeof(double));
+                                       sizeof(int) +
+                                       sizeof (ulong) +
+                                       (2 * IntPtr.Size) +
+                                       sizeof(double));
                 
                     if (value == null)
                     {
@@ -113,20 +113,20 @@ namespace memcached
             }
         }
 
-		public int cmd_get = 0;
-		public int cmd_set = 0;
-		public int cmd_flush = 0;
-		public int cmd_touch = 0;
-		public int get_hits = 0;
-		public int get_misses = 0;
-		public int delete_misses = 0;
-		public int delete_hits = 0;
-		public int incr_misses = 0;
-		public int incr_hits = 0;
-		public int decr_misses = 0;
-		public int decr_hits = 0;
-		public int cas_misses = 0;
-		public int cas_hits = 0;
+        public int cmd_get = 0;
+        public int cmd_set = 0;
+        public int cmd_flush = 0;
+        public int cmd_touch = 0;
+        public int get_hits = 0;
+        public int get_misses = 0;
+        public int delete_misses = 0;
+        public int delete_hits = 0;
+        public int incr_misses = 0;
+        public int incr_hits = 0;
+        public int decr_misses = 0;
+        public int decr_hits = 0;
+        public int cas_misses = 0;
+        public int cas_hits = 0;
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
         private static ulong globalSize = 0;
@@ -197,7 +197,7 @@ namespace memcached
         /// </summary>
         public void Clear()
         {
-			cmd_flush++;
+            cmd_flush++;
             lock(db)
             {
                 globalSize -= size - (ulong)IntPtr.Size;
@@ -246,15 +246,15 @@ namespace memcached
                 if (!db.ContainsKey (id))
                 {
                     db.Add(id, data);
-					ulong s6 = data.getSize();
+                    ulong s6 = data.getSize();
                     size += s6;
-					globalSize += s6;
+                    globalSize += s6;
                     return;
                 }
                 ulong s = db[id].getSize();
-				ulong s2 = data.getSize();
-				globalSize += s2;
-				size += s2;
+                ulong s2 = data.getSize();
+                globalSize += s2;
+                size += s2;
                 size -= s;
                 globalSize -= s;
                 db[id].update = DateTime.Now;
@@ -269,7 +269,7 @@ namespace memcached
         /// <param name="value">Value.</param>
         public bool Set(string key, Item value)
         {
-			cmd_set++;
+            cmd_set++;
             hardSet (key, value);
             return true;
         }
@@ -278,13 +278,13 @@ namespace memcached
         /// Get the specified key.
         /// </summary>
         /// <param name="key">Key.</param>
-		/// <param name="ns">Skip the counter</param>
+        /// <param name="ns">Skip the counter</param>
         public Item Get(string key, bool ns = false)
         {
-			if (!ns)
-			{
-				cmd_get++;
-			}
+            if (!ns)
+            {
+                cmd_get++;
+            }
             lock (db)
             {
                 if (db.ContainsKey(key))
@@ -310,10 +310,10 @@ namespace memcached
                     size -= s2;
                     globalSize -= s2;
                     db.Remove (key);
-					delete_hits++;
+                    delete_hits++;
                     return true;
                 }
-				delete_misses++;
+                delete_misses++;
                 return false;
             }
         }
@@ -354,8 +354,8 @@ namespace memcached
                     {
                         ulong s = db[key].getSize();
                         ulong s2 = d.getSize();
-						globalSize += s2;
-						size += s2;
+                        globalSize += s2;
+                        size += s2;
                         size = size - s;
                         globalSize -= s;
                         db[key] = d;
@@ -380,8 +380,8 @@ namespace memcached
                 {
                     ulong s = db[key].getSize();
                     ulong s2 = d.getSize();
-					globalSize += s2;
-					size += s2;
+                    globalSize += s2;
+                    size += s2;
                     size = size - s;
                     globalSize -= s;
                     db[key] = d;
@@ -399,7 +399,7 @@ namespace memcached
         /// <param name="time">Time.</param>
         public bool Touch(string key, int time)
         {
-			cmd_touch++;
+            cmd_touch++;
             lock (db)
             {
                 if (db.ContainsKey (key))

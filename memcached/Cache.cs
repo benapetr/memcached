@@ -228,6 +228,35 @@ namespace memcached
             }
         }
 
+        public bool FreeSpace(ulong Required)
+        {
+            ulong Current = 0;
+            List<string> deleted = new List<string>();
+            lock (db)
+            {
+                foreach (KeyValuePair<string,Item> item in db)
+                {
+                    if (item.Value.expiry == DateTime.MaxValue)
+                    {
+                        ulong size = item.Value.getSize();
+                        globalSize -= size;
+                        size -= size;
+                        Current += size;
+                        deleted.Add(item.Key);
+                        if (Current > Required)
+                        {
+                            break;
+                        }
+                    }
+                }
+                foreach (string item in deleted)
+                {
+                    db.Remove(item);
+                }
+                return Current > Required;
+            }
+        }
+
         /// <summary>
         /// Count this instance.
         /// </summary>
@@ -273,6 +302,7 @@ namespace memcached
             hardSet (key, value);
             return true;
         }
+
 
         /// <summary>
         /// Get the specified key.

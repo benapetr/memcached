@@ -62,14 +62,19 @@ namespace memcached
 
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return 3;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
+            }
+
+            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            {
+                // we don't have enough free size let's try to free some
+                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return 3;
+                }
             }
 
             // everything is ok let's go
@@ -92,8 +97,13 @@ namespace memcached
             {
                 if (FreeSize (MainClass.GlobalCaches[user]) < Item.getSize ())
                 {
-                    SendError(ErrorCode.OutOfMemory, ref w);
-                    return 1;
+                    // we don't have enough free size let's try to free some
+                    if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                    {
+                        // error
+                        SendError (ErrorCode.OutOfMemory, ref w);
+                        return 1;
+                    }
                 }
                 MainClass.GlobalCaches[user].Set (key, Item);
             }
@@ -172,15 +182,21 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return 3;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
+
+            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            {
+                // we don't have enough free size let's try to free some
+                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return 3;
+                }
+            }
+
             
             // everything is ok let's go
             string chunk = r.ReadLine();
@@ -308,14 +324,19 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return;
+            }
+
+            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            {
+                // we don't have enough free size let's try to free some
+                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return;
+                }
             }
             
             // everything is ok let's go
@@ -501,14 +522,19 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return;
+            }
+
+            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            {
+                // we don't have enough free size let's try to free some
+                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return;
+                }
             }
             
             // everything is ok let's go
@@ -662,16 +688,21 @@ namespace memcached
             
             if (!int.TryParse (part[3], out size))
             {
-                if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
-                {
-                    // error
-                    SendError (ErrorCode.InvalidValues, ref w);
-                    return 3;
-                }
                 SendError (ErrorCode.InvalidValues, ref w);
                 return 1;
             }
-            
+
+            if (FreeSize (MainClass.GlobalCaches[user]) < size || size < 0)
+            {
+                // we don't have enough free size let's try to free some
+                if (!MainClass.GlobalCaches[user].FreeSpace((ulong)size))
+                {
+                    // error
+                    SendError (ErrorCode.OutOfMemory, ref w);
+                    return 3;
+                }
+            }
+ 
             // everything is ok let's go
             string chunk = r.ReadLine();
             while (chunk.Length < size)
@@ -770,7 +801,7 @@ namespace memcached
             }
             return local;
         }
-
+        
         private static void TouchData(string parameters, ref System.IO.StreamWriter Writer, User user)
         {
             string key = null;

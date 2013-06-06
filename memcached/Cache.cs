@@ -290,6 +290,13 @@ namespace memcached
             {
                 if (db.ContainsKey(key))
                 {
+                    Item item = db[key];
+                    if (item.expiry < DateTime.Now)
+                    {
+                        get_misses++;
+                        db.Remove(item);
+                        return null;
+                    }
                     get_hits++;
                     return db[key];
                 }

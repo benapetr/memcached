@@ -761,7 +761,7 @@ namespace memcached
                 Send ("STAT pid " + System.Diagnostics.Process.GetCurrentProcess ().Id.ToString (), ref w);
                 Send ("STAT uptime " + MainClass.uptime ().ToString (), ref w);
                 Send ("STAT time " + ToUnix().ToString(), ref w);
-                Send ("STAT version sharp memcached " + Configuration.Version, ref w);
+                Send ("STAT version sharp-memcached" + Configuration.Version, ref w);
                 Send ("STAT pointer_size " + (IntPtr.Size * 8).ToString(), ref w);
                 Send ("STAT global_memory_limit " + Configuration.GlobalMemoryLimitByteSize.ToString(), ref w);
                 Send ("STAT user_memory_limit " + Configuration.InstanceMemoryLimitByteSize.ToString(), ref w);

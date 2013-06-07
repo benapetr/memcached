@@ -240,14 +240,19 @@ namespace memcached
 
         public void FreeHalf()
         {
+            MainClass.DebugLog("OOM: flushing half of " + db.Count.ToString());
             lock (db)
             {
                 Dictionary<string, Item> sorted = (from entry in db orderby entry.Value ascending select entry).ToDictionary(pair => pair.Key, pair => pair.Value);
                 List<string> keys = new List<string>();
                 keys.AddRange(sorted.Keys);
                 int remaining = (db.Count / 2);
+                MainClass.DebugLog("OOM: removing entries: " + remaining.ToString() + " from " + db.Count.ToString());
                 while (remaining > 0)
                 {
+                    ulong s2 = db[keys[0]].getSize();
+                    size -= s2;
+                    globalSize -= s2;
                     db.Remove(keys[0]);
                     keys.RemoveAt(0);
                     remaining--;
@@ -264,6 +269,7 @@ namespace memcached
                 {
                     return true;
                 }
+                MainClass.DebugLog("ERROR: freeing half of memory wasn't enough");
             }
             if (Configuration.FlushOom)
             {

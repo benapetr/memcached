@@ -85,6 +85,7 @@ namespace memcached
         /// The size of the instance memory limit byte.
         /// </summary>
         public static ulong InstanceMemoryLimitByteSize = 0;
+        public static bool FlushOom = false;
 
         /// <summary>
         /// Read this instance.
@@ -139,6 +140,9 @@ namespace memcached
                         break;
                     case "allowglobalflush":
                         Configuration.AllowGlobalFlush = bool.Parse(item.InnerText);
+                        break;
+                    case "flush_out":
+                        Configuration.FlushOom = bool.Parse(item.InnerText);
                         break;
                 }
             }

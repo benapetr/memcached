@@ -230,6 +230,11 @@ namespace memcached
 
         public bool FreeSpace(ulong Required)
         {
+            if (Configuration.FlushOom)
+            {
+                Clear();
+                return Required < (Configuration.InstanceMemoryLimit - size);
+            }
             ulong Current = 0;
             List<string> deleted = new List<string>();
             lock (db)

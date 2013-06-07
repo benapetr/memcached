@@ -33,7 +33,7 @@ namespace memcached
                                "  <instancememorylimit>"+ Configuration.InstanceMemoryLimit.ToString () +"</instancememorylimit>\n" +
                                "  <port>"+ Configuration.Port.ToString () +"</port>\n" +
                                "  <userdb>"+ Configuration.UserDB.ToString () +"</userdb>\n" +
-                               "  <flush_out>"+Configuration.FlushOom.ToString()+"</flush_out>" +
+                               "  <flush_out>"+Configuration.FlushOom.ToString()+"</flush_out>\n" +
                                "</configuration>\n");
         }
 

@@ -86,6 +86,7 @@ namespace memcached
         /// </summary>
         public static ulong InstanceMemoryLimitByteSize = 0;
         public static bool FlushOom = false;
+        public static bool FlushHalf = true;
 
         /// <summary>
         /// Read this instance.
@@ -143,6 +144,9 @@ namespace memcached
                         break;
                     case "flush_out":
                         Configuration.FlushOom = bool.Parse(item.InnerText);
+                        break;
+                    case "flush_half":
+                        Configuration.FlushHalf = bool.Parse(item.InnerText);
                         break;
                 }
             }

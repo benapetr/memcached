@@ -18,12 +18,13 @@
 
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace memcached
 {
     public class Cache
     {
-        public class Item
+        public class Item : IComparable
         {
             private static double unique = 0;
             /// <summary>
@@ -82,6 +83,15 @@ namespace memcached
                     unique++;
                     cas = unique;
                 }
+            }
+
+            public int CompareTo(object obj)
+            {
+                if (obj is Item)
+                {
+                    return this.update.CompareTo((obj as Item).update);
+                }
+                return 0;
             }
 
             /// <summary>
@@ -228,12 +238,37 @@ namespace memcached
             }
         }
 
+        public void FreeHalf()
+        {
+            lock (db)
+            {
+                Dictionary<string, Item> sorted = (from entry in db orderby entry.Value ascending select entry).ToDictionary(pair => pair.Key, pair => pair.Value);
+                List<string> keys = new List<string>();
+                keys.AddRange(sorted.Keys);
+                int remaining = (db.Count / 2);
+                while (remaining > 0)
+                {
+                    db.Remove(keys[0]);
+                    keys.RemoveAt(0);
+                    remaining--;
+                }
+            }
+        }
+
         public bool FreeSpace(ulong Required)
         {
+            if (Configuration.FlushHalf)
+            {
+                FreeHalf();
+                if (Required < (Configuration.InstanceMemoryLimitByteSize - size))
+                {
+                    return true;
+                }
+            }
             if (Configuration.FlushOom)
             {
                 Clear();
-                return Required < (Configuration.InstanceMemoryLimit - size);
+                return Required < (Configuration.InstanceMemoryLimitByteSize - size);
             }
             ulong Current = 0;
             List<string> deleted = new List<string>();

@@ -72,7 +72,7 @@ namespace memcached
                 return 1;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 SendError (ErrorCode.OutOfMemory, ref w);
                 return 3;
@@ -193,7 +193,7 @@ namespace memcached
                 return 1;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 // error
                 SendError (ErrorCode.OutOfMemory, ref w);
@@ -343,7 +343,7 @@ namespace memcached
                 return;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 // error
                 SendError (ErrorCode.OutOfMemory, ref w);
@@ -556,7 +556,7 @@ namespace memcached
                 return;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 // error
                 SendError (ErrorCode.OutOfMemory, ref w);
@@ -652,7 +652,7 @@ namespace memcached
                 return 1;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 // error
                 SendError (ErrorCode.OutOfMemory, ref w);
@@ -746,7 +746,7 @@ namespace memcached
                 return 1;
             }
 
-            if (size > Configuration.InstanceMemoryLimit)
+            if ((ulong)size > Configuration.InstanceMemoryLimitByteSize)
             {
                 // error
                 SendError (ErrorCode.OutOfMemory, ref w);

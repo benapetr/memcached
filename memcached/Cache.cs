@@ -123,20 +123,21 @@ namespace memcached
             }
         }
 
-        public int cmd_get = 0;
-        public int cmd_set = 0;
-        public int cmd_flush = 0;
-        public int cmd_touch = 0;
-        public int get_hits = 0;
-        public int get_misses = 0;
-        public int delete_misses = 0;
-        public int delete_hits = 0;
-        public int incr_misses = 0;
-        public int incr_hits = 0;
-        public int decr_misses = 0;
-        public int decr_hits = 0;
-        public int cas_misses = 0;
-        public int cas_hits = 0;
+        public volatile int cmd_get = 0;
+        public volatile int cmd_set = 0;
+        public volatile int cmd_flush = 0;
+        public volatile int cmd_touch = 0;
+        public volatile int get_hits = 0;
+        public volatile int get_misses = 0;
+        public volatile int delete_misses = 0;
+        public volatile int delete_hits = 0;
+        public volatile int incr_misses = 0;
+        public volatile int incr_hits = 0;
+        public volatile int decr_misses = 0;
+        public volatile int decr_hits = 0;
+        public volatile int cas_misses = 0;
+        public volatile int cas_hits = 0;
+        public static object l = new object();
         private Dictionary<string, Item> db = new Dictionary<string, Item>();
 
         private static ulong globalSize = 0;
@@ -190,7 +191,10 @@ namespace memcached
         public Cache ()
         {
             size = (ulong)IntPtr.Size;
-            globalSize += (ulong)IntPtr.Size;
+            lock (l)
+            {
+                globalSize += (ulong)IntPtr.Size;
+            }
         }
 
         /// <summary>
@@ -207,10 +211,13 @@ namespace memcached
         /// </summary>
         public void Clear()
         {
-            cmd_flush++;
-            lock(db)
+            lock (l)
             {
                 globalSize -= size - (ulong)IntPtr.Size;
+            }
+            lock(db)
+            {
+                cmd_flush++;
                 db.Clear();
                 size = (ulong)IntPtr.Size;
             }
@@ -323,12 +330,18 @@ namespace memcached
                     db.Add(id, data);
                     ulong s6 = data.getSize();
                     size += s6;
-                    globalSize += s6;
+                    lock (l)
+                    {
+                        globalSize += s6;
+                    }
                     return;
                 }
                 ulong s = db[id].getSize();
                 ulong s2 = data.getSize();
-                globalSize += s2;
+                lock (l)
+                {
+                    globalSize += s2;
+                }
                 size += s2;
                 size -= s;
                 globalSize -= s;
@@ -344,7 +357,10 @@ namespace memcached
         /// <param name="value">Value.</param>
         public bool Set(string key, Item value)
         {
-            cmd_set++;
+            lock (l)
+            {
+                cmd_set++;
+            }
             hardSet (key, value);
             return true;
         }

@@ -23,19 +23,19 @@ namespace memcached
         /// <summary>
         /// The bytes sent.
         /// </summary>
-        public static double BytesSent = 0;
+        public static ulong BytesSent = 0;
         /// <summary>
         /// The bytes received.
         /// </summary>
-        public static double BytesReceived = 0;
+        public static ulong BytesReceived = 0;
         /// <summary>
         /// The connections.
         /// </summary>
-        public static int Connections = 0;
+        public static volatile int Connections = 0;
         /// <summary>
         /// The open connections.
         /// </summary>
-        public static int OpenConnections = 0;
+        public static volatile int OpenConnections = 0;
         /// <summary>
         /// The watcher.
         /// </summary>

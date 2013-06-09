@@ -173,6 +173,7 @@ namespace memcached
                         case "gset":
                         case "add":
                         case "replace":
+                        case "ggets":
                         case "append":
                         case "prepend":
                         case "cas":
@@ -216,6 +217,9 @@ namespace memcached
                         continue;
                     case "get":
                         Get(parameters, ref Writer, ref Reader, _U);
+                        continue;
+                    case "ggets":
+                        Gets(parameters, ref Writer, ref Reader, MainClass.GlobalUser);
                         continue;
                     case "gets":
                         Gets(parameters, ref Writer, ref Reader, _U);

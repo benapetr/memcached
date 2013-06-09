@@ -68,11 +68,14 @@ The memory limit and usage can be displayed per user
  * Authentication
  * Support for large memory (64bit memory addressing)
  * More configuration options
+ * Shared memory pool that can be accessed using gget ggets or gset
+ * Improved statistics
+ * Simple but powerful configuration
 
 Current issues:
 
- * Doesn't support binary protocol
- * Doesn't support memory sorting
+ * Doesn't support binary protocol (not documented anywhere)
+ * Doesn't support memory sorting (doesn't seem to be easily possible in c#)
 
 Descriptive errors
 ==================

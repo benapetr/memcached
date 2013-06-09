@@ -211,12 +211,10 @@ namespace memcached
         /// </summary>
         public void Clear()
         {
-            lock (l)
-            {
-                globalSize -= size - (ulong)IntPtr.Size;
-            }
+            cmd_flush++;
             lock(db)
             {
+                globalSize -= size - (ulong)IntPtr.Size;
                 cmd_flush++;
                 db.Clear();
                 size = (ulong)IntPtr.Size;
@@ -377,7 +375,6 @@ namespace memcached
             {
                 cmd_get++;
             }
-
             lock (db)
             {
                 if (db.ContainsKey(key))

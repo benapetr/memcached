@@ -279,6 +279,7 @@ namespace memcached
             
             if (item == null)
             {
+                cache.decr_misses++;
                 Send ("NOT_FOUND", ref w);
                 return;
             }
@@ -292,7 +293,7 @@ namespace memcached
             }
             
             current -= jump;
-            
+            cache.decr_hits++;
             cache.hardSet (key, new Cache.Item(current.ToString (), item.expiry, item.flags));
             Send (current.ToString (), ref w);
         }
@@ -349,7 +350,7 @@ namespace memcached
                 SendError (ErrorCode.OutOfMemory, ref w);
                 return;
             }
-
+            
             // everything is ok let's go
             string chunk = r.ReadLine();
             while (chunk.Length < size)
@@ -426,6 +427,7 @@ namespace memcached
             if (item == null)
             {
                 Send ("NOT_FOUND", ref w);
+                cache.incr_misses++;
                 return;
             }
 
@@ -438,6 +440,7 @@ namespace memcached
             }
 
             current += jump;
+            cache.incr_hits++;
 
             cache.hardSet (key, new Cache.Item(current.ToString (), item.expiry, item.flags));
             Send (current.ToString (), ref w);
@@ -602,7 +605,6 @@ namespace memcached
 
             cache.hardSet (key, replacement);
             
-
             if (!pars.EndsWith("noreply"))
             {
                 Send ("STORED", ref w);
